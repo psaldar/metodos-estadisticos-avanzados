@@ -1,2 +1,0 @@
-Los campos y sus valores de los archivos de información financiera están separados por el caracter ¬
- , Usar este caracter  para separar la información en sus campos correspondientes.
