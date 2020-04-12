@@ -16,6 +16,8 @@ library(pastecs)
 library(corrplot)
 library(mvtnorm)
 library(ggplot2)
+library(dplyr)
+library(lme4)
 ```
 
 Importacion de los paquetes necesarios para ejecutar el codigo en este Markdown
@@ -75,6 +77,16 @@ median_data = colMedians(as.matrix(data))
 names(median_data) = names(data)
 median_data
 ```
+
+### Boxplot
+
+```{r}
+par(mfrow=c(1,2))
+boxplot(Costo_de_ventas~YEAR, data = all_data)
+boxplot(Gastos_de_ventas~YEAR, data = all_data)
+```
+
+
 
 #### Matriz de Covarianzas
 ```{r}
@@ -172,4 +184,110 @@ p1 = grafica(data, "trm", "pib")
 ```{r}
 p2 = grafica(data, "Costo_de_ventas" , "Costo_de_ventas_dif")
 ```
+
+### Creacion de modelos
+
+```{r}
+data_aux = select(all_data,select = -starts_with('NIT'))
+
+data_train = subset(data_aux, subset = YEAR<2018)
+data_test = subset(data_aux, subset = YEAR>=2018)
+```
+
+## Modelo para los Costos
+
+### Modelo Lineal General
+
+```{r}
+mod_lin = lm('Costo_de_ventas~balance_fiscal+cuenta_corriente+desempleo+inflacion+pib+tasa_intervencion+trm', data = data_train)
+```
+
+```{r}
+summary(mod_lin)
+```
+#### Desempeno del Modelo Entrenado
+
+En el conjunto de entrenamiento:
+```{r}
+preds = predict(mod_lin)
+
+plot(preds, data_train$Costo_de_ventas, xlab = 'Valor predicho', ylab = 'Valor Real')
+abline(a=0, b=1, lwd = 2, col = 'red')
+```
+
+En el conjunto de Prueba
+```{r}
+preds_test = predict(mod_lin, newdata = data_test)
+plot(preds_test, data_test$Costo_de_ventas, xlab = 'Valor predicho', ylab = 'Valor Real')
+abline(a=0, b=1, lwd = 2, col = 'red')
+```
+
+### Graficos de Evaluacion de modelos
+
+```{r}
+par(mfrow=c(2,2))
+plot(mod_lin, which = c(1:4))
+```
+
+
+### Modelo Lineal con Regularizacion
+
+Vamos a encontrar el parametri de regulairzacion
+```{r}
+library(glmnet)
+
+f1 = formula('Costo_de_ventas~balance_fiscal+desempleo+inflacion+pib+tasa_intervencion+trm')
+
+X = model.matrix(f1, data = as.data.frame(data_train))
+Y = data_train$Costo_de_ventas
+
+lambda_grid = 10^seq(10,-2,length.out = 100)
+modelo_regularizacion = cv.glmnet(x = X, y = Y, lambda = lambda_grid)
+```
+
+```{r}
+plot(modelo_regularizacion)
+```
+
+Entrenamos el modelo agregando el parametro de regularizacion, y asi ver relevancia de variables
+```{r}
+mod_lin_reg = glmnet(x = X, y = Y, lambda = modelo_regularizacion$lambda.min, alpha = 1, intercept = FALSE)
+coef(mod_lin_reg)
+```
+
+
+### Modelo de Efectos Mixtos
+
+```{r}
+#mod_me = lmer(Costo_de_ventas~balance_fiscal+desempleo+inflacion+pib+tasa_intervencion+trm+(Costo_de_ventas|balance_fiscal)+(Costo_de_ventas|desempleo)+(Costo_de_ventas|inflacion)+(Costo_de_ventas|pib)+(Costo_de_ventas|tasa_intervencion)+(Costo_de_ventas|trm), data = data_train)
+```
+
+
+
+```{r}
+plot(all_data$YEAR, all_data$Costo_de_ventas, col=all_data$NIT, xlab = "Año", ylab = "Valor del Costo de Venta por Empresa")
+```
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
