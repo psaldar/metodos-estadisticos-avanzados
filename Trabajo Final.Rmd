@@ -1,0 +1,175 @@
+---
+title: "Trabajo Final - Métodos Estadísticos Avanzados en Ciencia de los Datos"
+author: "Pablo Saldarriaga-Aristizabal, Nicolás Prieto-Escobar, Obed Rios-Ruiz"
+date: "Semestre 2020-1"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readxl)
+library(ggplot2)
+library(kableExtra)
+library(matrixStats)
+library(Hmisc)
+library(pastecs)
+library(corrplot)
+library(mvtnorm)
+library(ggplot2)
+```
+
+Importacion de los paquetes necesarios para ejecutar el codigo en este Markdown
+
+```{r}
+
+```
+
+
+## Introduccion
+
+La intro
+
+## Clasificación Industrial Seleccionada
+
+La cementera
+
+## Consolidación de Información
+
+```{r}
+all_data = read.csv("PreparacionDatos/Data/consolidado_info.csv", encoding="UTF-8")
+data = all_data[,-c(1,2)]
+```
+
+
+## Transformación  de Variables y Análisis Descriptivo
+
+
+Damos una visualizacion inicial al conjunto de datos con el que se va a trabajar:
+
+```{r}
+head(data)
+```
+
+En la siguiente tabla, vemos información descriptiva de las variables que se considerarán en la etapa de modelamiento del trabajo, vemos así que contamos con un total de 11 variables, cada una con magnitudes diferentes. Vemos que algunos indicadores tienen valores entre 0 y 1 tal como lo es el desempleo, mientras que otras variables representan dinero, tal como la trm, el monto de gastos y ventas. Así, tenemos una idea inicial de las características del conjunto de datos, por lo que se aplicarán lo métodos correspondientes cuando sea necesario, si lo que se realizará es sensible a la escala de los datos.
+
+```{r}
+(summary_df <- stat.desc(data))
+```
+Además de la información descriptiva presentados en la tabla anterior, podemos ver para cada una de las variables, su distribución de forma visual con la ayuda de la creación de histogramas de frecuencia.
+
+```{r}
+hist(data)
+```
+
+
+Vamos a obtener la informacion relacionada a las medidas de centralidad y dispersion del conjunto de datos. Inicialmente, presentamos información del vector de medias y medianas que describen la centralidad del conjutno de datos. Posteriormente, consideramos las matrices de Covarianza y Correlación para tener una intuición de la variabilidad de la información que consideramos.
+
+#### Vector de Medias
+```{r}
+(mean_data = colMeans(data))
+```
+
+### Vector de Medianas
+```{r}
+median_data = colMedians(as.matrix(data))
+names(median_data) = names(data)
+median_data
+```
+
+#### Matriz de Covarianzas
+```{r}
+(cov_data = cov(data))
+```
+
+#### Matriz de Correlación
+```{r}
+(cor_data = cor(data))
+```
+
+```{r}
+corrplot(cor_data, method="circle")
+```
+
+Dado que en este trabajo se pretende realizar la modelación de las variables de costo y gasto de ventas, la matriz de correlación es un buen indicador para observar relaciones lineales existentes en las variables. En particular, vemos para el caso de la información de gastos, una "fuerte" correlación de las variables cuenta corriente y desempleo, seguidas por la tasa de desempleo y la trm. Para este caso, es natural encontrar una correlacion positiva con las variables trm e inflación, pues están altamente relacionadas con los montos en trasacciones, por lo que un aumento en estos, conlleva claramente un aumento en los gastos de venta. Por lo que a primera vista estas medidas de correlación tienen sentido según lo que se conoce del mercado. Por otro lado, para la variable de ventas, no se ven correlaciones fuertes, lo que nos indica que no existe una relación lineal entre esta variable y las demás. Por lo que una buena alternativa en este trabajo, será considerar transformaciones no lineales de las variables para encontrar una dependencia con la información de los costos de venta.
+
+## Visualizacion de la distribucion de los datos
+
+
+```{r}
+panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...)
+{
+    usr <- par("usr"); on.exit(par(usr))
+    par(usr = c(0, 1, 0, 1))
+    r <- abs(cor(x, y))
+    txt <- format(c(r, 0.123456789), digits = digits)[1]
+    txt <- paste0(prefix, txt)
+    if(missing(cex.cor)) cex.cor <- 0.8/strwidth(txt)
+    text(0.5, 0.5, txt, cex = cex.cor * r)
+}
+
+panel.hist <- function(x, ...)
+{
+    usr <- par("usr"); on.exit(par(usr))
+    par(usr = c(usr[1:2], 0, 1.5) )
+    h <- hist(x, plot = FALSE)
+    breaks <- h$breaks; nB <- length(breaks)
+    y <- h$counts; y <- y/max(y)
+    rect(breaks[-nB], 0, breaks[-1], y, col = "black", ...)
+}
+```
+
+```{r}
+pairs(data,diag.panel = panel.hist, lower.panel = panel.cor)
+```
+
+### Visualizacion de los datos segun curvas de normalidad
+
+```{r}
+### Funcion para encontrar los contornos
+c_alpha = function(alpha, sigma, p){
+  res = (2*pi)^(-p/2)*(det(sigma))^(-1/2)*exp(-1/2*qchisq(1-alpha, df = p))
+  
+  return(res)
+}
+
+grafica = function(data, name1, name2){
+
+  data_aux = data[c(name1,name2)]
+  names(data_aux) = c("y1","y2")
+  
+  cov_data = cov(data_aux)
+  mean_data = mean=colMeans(data_aux)
+  
+  min_value1 = min(data[name1])
+  max_value1 = max(data[name1])
+  
+  min_value2 = min(data[name2])
+  max_value2 = max(data[name2])
+  
+  n = 100
+  
+  y1 = seq(min_value1, max_value1, length.out = n)
+  y2 = seq(min_value2, max_value2, length.out = n)
+  
+  grid = expand.grid(y1,y2)
+  grid$Z<-apply(grid,1,dmvnorm,mean = mean_data,sigma=cov_data)
+  Z<-matrix(grid$Z,nrow=n,ncol=n)
+  
+  contornos = sapply(c(0.01, 0.05, 0.1), c_alpha, sigma = cov_data, 2)
+  
+  contour(y1,y2,Z,levels=contornos,labels=c("99%","95%","90%"),
+          las=1)
+  points(data_aux$y1,data_aux$y2)
+  grid()  
+  title(main = "Contornos de distribucion normal", xlab = name1, ylab = name2)
+}
+```
+
+```{r}
+p1 = grafica(data, "trm", "pib")
+```
+
+```{r}
+p2 = grafica(data, "Costo_de_ventas" , "Costo_de_ventas_dif")
+```
+
