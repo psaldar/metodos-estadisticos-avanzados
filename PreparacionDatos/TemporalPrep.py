@@ -55,7 +55,7 @@ dat2016['Año'] = 2016
 dat2017['Año'] = 2017
 dat2018['Año'] = 2018
 
-
+sys.exit()
 #### TEMPORAL
 ### Gastos de ventas de 2017 no esta en el indice, por ahora ponerlo en 0
 dat2017['Gastos de ventas'] = 0
