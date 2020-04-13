@@ -20,12 +20,6 @@ library(dplyr)
 library(lme4)
 ```
 
-Importacion de los paquetes necesarios para ejecutar el codigo en este Markdown
-
-```{r}
-
-```
-
 
 ## Introduccion
 
@@ -82,9 +76,21 @@ median_data
 
 ```{r}
 par(mfrow=c(1,2))
-boxplot(Costo_de_ventas~YEAR, data = all_data)
-boxplot(Gastos_de_ventas~YEAR, data = all_data)
+bxplot_costos = boxplot(Costo_de_ventas~YEAR, data = all_data)
+bxplot_gastos = boxplot(Gastos_de_ventas~YEAR, data = all_data)
 ```
+
+```{r}
+### Outliers para costos
+all_data[(all_data$Costo_de_ventas %in% bxplot_costos$out),]$NIT
+```
+
+```{r}
+### Outliers para gastos
+all_data[(all_data$Gastos_de_ventas %in% bxplot_gastos$out),]$NIT
+```
+
+Al observar la distribución del comportamiento de las variables de ventas y gastos para los 3 años en consideración, podemos ver que no hay mucha variación entre el comportamiento de estas a lo largo del tiempo, vemos que en particular, tanto el monto de costo y gasto promedio (mediana) es constante para los 3 años, aunque se nota un aumento en los costos en el año 2018 para el caso de algunas empresas. Ademas, vemos para que caso de los Costos, las mismas 2 empresas (relacionadas a los NITs 860009694 y 900378893) fueron las que presentaron un maypr valor de costos en los 3 periodos, por lo que el boxplot los considera registros outliers. Mirando la distribución de los gatos, notamos que una empresa tuvo los gastos mas altos en los 3 periodos (relacionadas al NIT 801002644) pero adicional, en el último año, la empresa con el NIT 800015615 tuvo un aumento en sus gastos, por lo que es considerado también como un outlier por el boxplot.
 
 
 
@@ -102,7 +108,7 @@ boxplot(Gastos_de_ventas~YEAR, data = all_data)
 corrplot(cor_data, method="circle")
 ```
 
-Dado que en este trabajo se pretende realizar la modelación de las variables de costo y gasto de ventas, la matriz de correlación es un buen indicador para observar relaciones lineales existentes en las variables. En particular, vemos para el caso de la información de gastos, una "fuerte" correlación de las variables cuenta corriente y desempleo, seguidas por la tasa de desempleo y la trm. Para este caso, es natural encontrar una correlacion positiva con las variables trm e inflación, pues están altamente relacionadas con los montos en trasacciones, por lo que un aumento en estos, conlleva claramente un aumento en los gastos de venta. Por lo que a primera vista estas medidas de correlación tienen sentido según lo que se conoce del mercado. Por otro lado, para la variable de ventas, no se ven correlaciones fuertes, lo que nos indica que no existe una relación lineal entre esta variable y las demás. Por lo que una buena alternativa en este trabajo, será considerar transformaciones no lineales de las variables para encontrar una dependencia con la información de los costos de venta.
+Dado que en este trabajo se pretende realizar la modelación de las variables de costo y gasto de ventas, la matriz de correlación es un buen indicador para observar relaciones lineales existentes en las variables. En particular, vemos para el caso de la información de gastos, una "fuerte" correlación de las variables de costo, diferencia de costos y diferencia de ventas. Para este caso, es natural encontrar una correlacion positiva con dichas variables, pues es claro que costos y gastos están asociados entre sí. Igualmente, la variable de diferencia de gastos, fue calculada con la variable gastos, por lo tanto tiene sentido encontrar esta correlación. Por otro lado, tanto para la variable de ventas como gastos, no se ven correlaciones fuertes en relación a las variables macro-económicas, lo que nos indica que no existe una relación lineal entre esta variable y las demás. Por lo que una buena alternativa en este trabajo, será considerar transformaciones no lineales de las variables para encontrar una dependencia con la información de los costos de venta.
 
 ## Visualizacion de la distribucion de los datos
 
@@ -185,13 +191,25 @@ p1 = grafica(data, "trm", "pib")
 p2 = grafica(data, "Costo_de_ventas" , "Costo_de_ventas_dif")
 ```
 
+```{r}
+p3 = grafica(data, "Costo_de_ventas" , "Gastos_de_ventas")
+```
+
 ### Creacion de modelos
 
 ```{r}
 data_aux = select(all_data,select = -starts_with('NIT'))
 
 data_train = subset(data_aux, subset = YEAR<2018)
+data_train_z = scale(data_train, center = TRUE, scale = TRUE)
+
+media_tr = attr(data_train_z, 'scaled:center')
+stdev_tr = attr(data_train_z, 'scaled:scale')
+
+data_train_z = as.data.frame(data_train_z)
+
 data_test = subset(data_aux, subset = YEAR>=2018)
+data_test_z = as.data.frame(scale(data_test,  center = media_tr, scale = stdev_tr))
 ```
 
 ## Modelo para los Costos
@@ -199,7 +217,7 @@ data_test = subset(data_aux, subset = YEAR>=2018)
 ### Modelo Lineal General
 
 ```{r}
-mod_lin = lm('Costo_de_ventas~balance_fiscal+cuenta_corriente+desempleo+inflacion+pib+tasa_intervencion+trm', data = data_train)
+mod_lin = lm('Costo_de_ventas~pib+trm', data = data_train_z)
 ```
 
 ```{r}
@@ -211,14 +229,14 @@ En el conjunto de entrenamiento:
 ```{r}
 preds = predict(mod_lin)
 
-plot(preds, data_train$Costo_de_ventas, xlab = 'Valor predicho', ylab = 'Valor Real')
+plot(preds, data_train_z$Costo_de_ventas, xlab = 'Valor predicho', ylab = 'Valor Real')
 abline(a=0, b=1, lwd = 2, col = 'red')
 ```
 
 En el conjunto de Prueba
 ```{r}
-preds_test = predict(mod_lin, newdata = data_test)
-plot(preds_test, data_test$Costo_de_ventas, xlab = 'Valor predicho', ylab = 'Valor Real')
+preds_test = predict(mod_lin, newdata = data_test_z)
+plot(preds_test, data_test_z$Costo_de_ventas, xlab = 'Valor predicho', ylab = 'Valor Real')
 abline(a=0, b=1, lwd = 2, col = 'red')
 ```
 
@@ -238,8 +256,8 @@ library(glmnet)
 
 f1 = formula('Costo_de_ventas~balance_fiscal+desempleo+inflacion+pib+tasa_intervencion+trm')
 
-X = model.matrix(f1, data = as.data.frame(data_train))
-Y = data_train$Costo_de_ventas
+X = model.matrix(f1, data = as.data.frame(data_train_z))
+Y = data_train_z$Costo_de_ventas
 
 lambda_grid = 10^seq(10,-2,length.out = 100)
 modelo_regularizacion = cv.glmnet(x = X, y = Y, lambda = lambda_grid)
@@ -259,7 +277,8 @@ coef(mod_lin_reg)
 ### Modelo de Efectos Mixtos
 
 ```{r}
-#mod_me = lmer(Costo_de_ventas~balance_fiscal+desempleo+inflacion+pib+tasa_intervencion+trm+(Costo_de_ventas|balance_fiscal)+(Costo_de_ventas|desempleo)+(Costo_de_ventas|inflacion)+(Costo_de_ventas|pib)+(Costo_de_ventas|tasa_intervencion)+(Costo_de_ventas|trm), data = data_train)
+### Esto aun no funciona
+#mod_me = lmer('Costo_de_ventas~balance_fiscal+(Costo_de_ventas|balance_fiscal)', data = data_train_z)
 ```
 
 
