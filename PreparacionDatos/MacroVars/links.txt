@@ -1,0 +1,21 @@
+
+TRM
+https://www.banrep.gov.co/en/colombian-peso-market-exchange-rate
+
+Cuenta corriente
+https://www.banrep.gov.co/es/estadisticas/balanza-pagos
+
+Inflación:
+https://www.dane.gov.co/index.php/estadisticas-por-tema/precios-y-costos/indice-de-precios-al-consumidor-ipc/ipc-informacion-tecnica#variaciones
+
+Desempleo
+https://www.dane.gov.co/index.php/estadisticas-por-tema/mercado-laboral/empleo-y-desempleo
+
+Balance Fiscal
+https://www.banrep.gov.co/es/series-estadisticas/see_finanzas_publi.htm
+
+Tasa intervencion (no anualizada)
+https://www.banrep.gov.co/es/estadisticas/tasas-interes-politica-monetaria
+
+PIB
+https://www.banrep.gov.co/es/estadisticas/producto-interno-bruto-pib
