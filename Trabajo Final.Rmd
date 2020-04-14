@@ -18,6 +18,7 @@ library(mvtnorm)
 library(ggplot2)
 library(dplyr)
 library(lme4)
+library(car)
 ```
 
 
@@ -33,6 +34,7 @@ La cementera
 
 ```{r}
 all_data = read.csv("PreparacionDatos/Data/consolidado_info.csv", encoding="UTF-8")
+NIT = all_data['NIT'] 
 data = all_data[,-c(1,2)]
 ```
 
@@ -43,13 +45,14 @@ data = all_data[,-c(1,2)]
 Damos una visualizacion inicial al conjunto de datos con el que se va a trabajar:
 
 ```{r}
-head(data)
+kable(head(round(data,2)))
 ```
 
 En la siguiente tabla, vemos información descriptiva de las variables que se considerarán en la etapa de modelamiento del trabajo, vemos así que contamos con un total de 11 variables, cada una con magnitudes diferentes. Vemos que algunos indicadores tienen valores entre 0 y 1 tal como lo es el desempleo, mientras que otras variables representan dinero, tal como la trm, el monto de gastos y ventas. Así, tenemos una idea inicial de las características del conjunto de datos, por lo que se aplicarán lo métodos correspondientes cuando sea necesario, si lo que se realizará es sensible a la escala de los datos.
 
 ```{r}
-(summary_df <- stat.desc(data))
+summary_df <- stat.desc(data)
+kable(summary_df)
 ```
 Además de la información descriptiva presentados en la tabla anterior, podemos ver para cada una de las variables, su distribución de forma visual con la ayuda de la creación de histogramas de frecuencia.
 
@@ -62,14 +65,15 @@ Vamos a obtener la informacion relacionada a las medidas de centralidad y disper
 
 #### Vector de Medias
 ```{r}
-(mean_data = colMeans(data))
+mean_data = colMeans(data)
+kable(formatC(mean_data,format = "e", digits = 2))
 ```
 
 ### Vector de Medianas
 ```{r}
 median_data = colMedians(as.matrix(data))
 names(median_data) = names(data)
-median_data
+kable(formatC(median_data,,format = "e", digits = 2))
 ```
 
 ### Boxplot
@@ -82,13 +86,16 @@ bxplot_gastos = boxplot(Gastos_de_ventas~YEAR, data = all_data)
 
 ```{r}
 ### Outliers para costos
-all_data[(all_data$Costo_de_ventas %in% bxplot_costos$out),]$NIT
+kable(all_data[(all_data$Costo_de_ventas %in% bxplot_costos$out),]$NIT)
 ```
 
 ```{r}
 ### Outliers para gastos
-all_data[(all_data$Gastos_de_ventas %in% bxplot_gastos$out),]$NIT
+kable(all_data[(all_data$Gastos_de_ventas %in% bxplot_gastos$out),]$NIT)
 ```
+
+#### Analisis:
+
 
 Al observar la distribución del comportamiento de las variables de ventas y gastos para los 3 años en consideración, podemos ver que no hay mucha variación entre el comportamiento de estas a lo largo del tiempo, vemos que en particular, tanto el monto de costo y gasto promedio (mediana) es constante para los 3 años, aunque se nota un aumento en los costos en el año 2018 para el caso de algunas empresas. Ademas, vemos para que caso de los Costos, las mismas 2 empresas (relacionadas a los NITs 860009694 y 900378893) fueron las que presentaron un maypr valor de costos en los 3 periodos, por lo que el boxplot los considera registros outliers. Mirando la distribución de los gatos, notamos que una empresa tuvo los gastos mas altos en los 3 periodos (relacionadas al NIT 801002644) pero adicional, en el último año, la empresa con el NIT 800015615 tuvo un aumento en sus gastos, por lo que es considerado también como un outlier por el boxplot.
 
@@ -96,12 +103,14 @@ Al observar la distribución del comportamiento de las variables de ventas y gas
 
 #### Matriz de Covarianzas
 ```{r}
-(cov_data = cov(data))
+cov_data = cov(data)
+kable(formatC(cov_data,format = "e", digits = 2))
 ```
 
 #### Matriz de Correlación
 ```{r}
-(cor_data = cor(data))
+cor_data = cor(data)
+kable(round(cor_data,2))
 ```
 
 ```{r}
@@ -199,8 +208,24 @@ p3 = grafica(data, "Costo_de_ventas" , "Gastos_de_ventas")
 
 ```{r}
 data_aux = select(all_data,select = -starts_with('NIT'))
+set.seed(42)
 
-data_train = subset(data_aux, subset = YEAR<2018)
+empresas = unique(all_data$NIT)
+
+smp_size <- floor(0.75 * length(empresas) )
+
+idx_train = sample(seq_len(length(empresas)), size = smp_size)
+
+empresas_train = empresas[idx_train]
+empresas_test = empresas[-idx_train]
+
+train = all_data$NIT%in%empresas_train
+test = all_data$NIT%in%empresas_test
+
+NIT_train = NIT[train,]
+NIT_test = NIT[test,]
+
+data_train = data_aux[train,]
 data_train_z = scale(data_train, center = TRUE, scale = TRUE)
 
 media_tr = attr(data_train_z, 'scaled:center')
@@ -208,8 +233,12 @@ stdev_tr = attr(data_train_z, 'scaled:scale')
 
 data_train_z = as.data.frame(data_train_z)
 
-data_test = subset(data_aux, subset = YEAR>=2018)
+data_test = data_aux[test,]
 data_test_z = as.data.frame(scale(data_test,  center = media_tr, scale = stdev_tr))
+
+data_train_z$NIT = NIT_train
+data_test_z$NIT = NIT_test
+
 ```
 
 ## Modelo para los Costos
@@ -243,8 +272,64 @@ abline(a=0, b=1, lwd = 2, col = 'red')
 ### Graficos de Evaluacion de modelos
 
 ```{r}
-par(mfrow=c(2,2))
-plot(mod_lin, which = c(1:4))
+par(mfrow=c(3,2))
+mod_plot = plot(mod_lin, which = c(1:6))
+```
+
+De los gráficos anteriores, en particular analizando el valor de la distancia de Cook para las observaciones, notamos que las observaciones 15, 31, 48 y 64 son candidatas a ser registros atípicos en el conjunto de datos, por lo que entrenaremos un nuevo modelo eliminando estos registros. Notar que estos registros coinciden con las empresas con NIT 860009694 y 900378893 para los años 2016 y 2017, lo cual coincide con los registros raros encontrados en la sección descriptiva utilizando el boxplot
+
+```{r}
+### Vector para eliminar registros atipicos
+outliers = c(15, 31, 48, 64)
+data_train_z_noOut = data_train_z[-outliers,]
+```
+
+
+
+```{r}
+h_ii<-hatvalues(mod_lin)
+plot(hatvalues(mod_lin),las=1,xlab="i",ylab="hii",main="Influencia (h_ii)",type="h")
+```
+
+### Inflacion de la varianza
+
+```{r}
+#vif(mod_lin)
+```
+
+## Entrenamiento del modelo sin Outliers
+
+```{r}
+mod_lin02 = lm('Costo_de_ventas~pib+trm', data = data_train_z_noOut)
+```
+
+```{r}
+summary(mod_lin02)
+```
+
+
+#### Desempeno del Modelo Entrenado sin Outliers
+
+En el conjunto de entrenamiento:
+```{r}
+preds = predict(mod_lin02)
+
+plot(preds, data_train_z_noOut$Costo_de_ventas, xlab = 'Valor predicho', ylab = 'Valor Real')
+abline(a=0, b=1, lwd = 2, col = 'red')
+```
+
+En el conjunto de Prueba
+```{r}
+preds_test = predict(mod_lin02, newdata = data_test_z)
+plot(preds_test, data_test_z$Costo_de_ventas, xlab = 'Valor predicho', ylab = 'Valor Real')
+abline(a=0, b=1, lwd = 2, col = 'red')
+```
+
+### Graficos de Evaluacion de modelos entrenando sin Outliers
+
+```{r}
+par(mfrow=c(3,2))
+mod_plot = plot(mod_lin02, which = c(1:6))
 ```
 
 
@@ -254,12 +339,12 @@ Vamos a encontrar el parametri de regulairzacion
 ```{r}
 library(glmnet)
 
-f1 = formula('Costo_de_ventas~balance_fiscal+desempleo+inflacion+pib+tasa_intervencion+trm')
+f1 = formula('Costo_de_ventas~-1+balance_fiscal+desempleo+inflacion+pib+tasa_intervencion+trm')
 
 X = model.matrix(f1, data = as.data.frame(data_train_z))
 Y = data_train_z$Costo_de_ventas
 
-lambda_grid = 10^seq(10,-2,length.out = 100)
+lambda_grid = 10^seq(1,-2,length.out = 100)
 modelo_regularizacion = cv.glmnet(x = X, y = Y, lambda = lambda_grid)
 ```
 
@@ -277,35 +362,31 @@ coef(mod_lin_reg)
 ### Modelo de Efectos Mixtos
 
 ```{r}
-### Esto aun no funciona
-#mod_me = lmer('Costo_de_ventas~balance_fiscal+(Costo_de_ventas|balance_fiscal)', data = data_train_z)
+
+#mod_me = lmer('Costo_de_ventas~Gastos_de_ventas+(Gastos_de_ventas|NIT)', data = data_train_z)
+mod_me = lmer('Costo_de_ventas~pib+(pib|NIT)', data = data_train_z)
 ```
 
+```{r}
+par(mfrow=c(3,2))
+plot(mod_me, which = c(1:6))
+```
 
+```{r}
+preds = predict(mod_me)
+plot(preds,data_train_z$Costo_de_ventas)
+abline(a=0, b=1, lwd = 2, col = 'red')
+```
+
+```{r}
+preds = predict(mod_me, newdata = data_test_z,allow.new.levels=TRUE)
+plot(preds,data_test_z$Costo_de_ventas)
+abline(a=0, b=1, lwd = 2, col = 'red')
+```
 
 ```{r}
 plot(all_data$YEAR, all_data$Costo_de_ventas, col=all_data$NIT, xlab = "Año", ylab = "Valor del Costo de Venta por Empresa")
 ```
-
- 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
