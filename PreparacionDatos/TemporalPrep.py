@@ -50,10 +50,10 @@ for nit in NIT_empresas:
 
 
 #### Agregar la columna year a cada datafame
-dat2015['Año'] = 2015
-dat2016['Año'] = 2016
-dat2017['Año'] = 2017
-dat2018['Año'] = 2018
+dat2015['Year'] = 2015
+dat2016['Year'] = 2016
+dat2017['Year'] = 2017
+dat2018['Year'] = 2018
 
 ### Gastos de ventas de 2017 se llamaba Costos de distribución
 dat2017['Gastos de ventas'] = dat2017['Costos de distribución']
@@ -67,10 +67,10 @@ dat2018 = dat2018[dat2018['Periodo']=='Periodo Actual']
 
 #### Filtrar los dataframe para dejar solo los nit indicados y
 ### conservar solo las columnqs de Nit, gatos de ventas y costo de ventas
-dat_2015_f = dat2015[dat2015['NIT'].isin(nit_todos_periodos)][['NIT','Año','Costo de ventas', 'Gastos de ventas']]
-dat_2016_f = dat2016[dat2016['NIT'].isin(nit_todos_periodos)][['NIT','Año','Costo de ventas', 'Gastos de ventas']]
-dat_2017_f = dat2017[dat2017['NIT'].isin(nit_todos_periodos)][['NIT','Año','Costo de ventas', 'Gastos de ventas']]
-dat_2018_f = dat2018[dat2018['NIT'].isin(nit_todos_periodos)][['NIT','Año','Costo de ventas', 'Gastos de ventas']]
+dat_2015_f = dat2015[dat2015['NIT'].isin(nit_todos_periodos)][['NIT','Year','Costo de ventas', 'Gastos de ventas']]
+dat_2016_f = dat2016[dat2016['NIT'].isin(nit_todos_periodos)][['NIT','Year','Costo de ventas', 'Gastos de ventas']]
+dat_2017_f = dat2017[dat2017['NIT'].isin(nit_todos_periodos)][['NIT','Year','Costo de ventas', 'Gastos de ventas']]
+dat_2018_f = dat2018[dat2018['NIT'].isin(nit_todos_periodos)][['NIT','Year','Costo de ventas', 'Gastos de ventas']]
 
 
 ### Quitar duplicados de 2015 (quedarse con el primero)
