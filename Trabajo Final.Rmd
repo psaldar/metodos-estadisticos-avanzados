@@ -27,7 +27,35 @@ La intro
 
 ## Clasificación Industrial Seleccionada
 
-La cementera
+El sector de la construcción es uno de los más relevantes en la economía 
+colombiana. En nuestro contexto nacional el sector es considerado como uno de 
+los más vitales para el desarrollo del país y representa uno de los más 
+importantes rubros en materia de produccción interna componiendo cada año de 6
+a 7 por ciento del producto interno bruto total y hasta un 7.1% del total de ocupados
+a nivel nacional. Dicho sector es caracterizado
+por sus fluctuaciones estacionarias fuertemente influenciadas por los planes
+de infraestructura de gran escala y los planes de gobierno. Respecto al último trimestre de 2019 tuvo un
+aumento de 3.4%, uno de los más altos a nivel de america latina.
+
+Si bien las estimaciones globales para el año 2020 en Colombia para esta industria eran
+positivas, la coyuntura del COVID-19 ha de perturbar fuertemente el sector, 
+afectando fuertemente a los importadores de materiales y a la demanada frente a los
+retrasos en la ejecución de obras. Desde enero el sector de la producción de concreto
+ya estaba presentando caídas significativas de hasta un 8.3% respecto al año pasado en el
+mismo mes, por lo que se esperan peores resultados al cierre del segundo trimestre
+del año presente. Muchas compañías planearon incrementos en sus precios, con la esperanza de
+generar mayores ingresos, pero dichos planes han de ser postergados bajo la actual coyuntura.
+La demanda, el driver más relevante en la industria, claramente se ve desplazado
+efecto del impedimento de comercialización y la paralisis en el país bajo las medidas de cuarentena
+nacional. Un punto importante es que algunas compañías del sector podrán seguir
+con sus actividades producto de la inclusión de actividades de infraestructura como
+vital durante la crisis del COVID-19.
+
+Frente a la incertidumbre que generan estos escenarios y como la dinámica particular
+de cada compañía que aporta al crecimiento de la industria total evoluciona en el 
+tiempo se torna relevante construir análisis y modelos estadísticos robustos
+que respondan a las perturbaciones en el mercado y permitan obtener información
+valiosa para la toma de decisiones.
 
 ## Consolidación de Información
 
