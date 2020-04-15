@@ -19,6 +19,8 @@ library(ggplot2)
 library(dplyr)
 library(lme4)
 library(car)
+library(glmmLasso)
+library(influence.ME)
 ```
 
 
@@ -94,10 +96,34 @@ kable(all_data[(all_data$Costo.de.ventas %in% bxplot_costos$out),]$NIT)
 kable(all_data[(all_data$Gastos.de.ventas %in% bxplot_gastos$out),]$NIT)
 ```
 
+```{r}
+par(mfrow=c(1,2))
+bxplot_costos_dif = boxplot(Costo.de.ventas_dif~Year, data = all_data)
+bxplot_gastos_dif = boxplot(Gastos.de.ventas_dif~Year, data = all_data)
+```
+
+```{r}
+### Outliers para costos dif
+kable(all_data[(all_data$Costo.de.ventas_dif %in% bxplot_costos_dif$out),]$NIT)
+kable(all_data[(all_data$Costo.de.ventas_dif %in% bxplot_costos_dif$out),]$Costo.de.ventas_dif)
+```
+
+```{r}
+### Outliers para gastos dif
+kable(all_data[(all_data$Gastos.de.ventas_dif %in% bxplot_gastos_dif$out),]$NIT)
+kable(all_data[(all_data$Gastos.de.ventas_dif %in% bxplot_gastos_dif$out),]$Year)
+kable(all_data[(all_data$Gastos.de.ventas_dif %in% bxplot_gastos_dif$out),]$Gastos.de.ventas_dif)
+```
+
 #### Analisis:
 
 
 Al observar la distribución del comportamiento de las variables de ventas y gastos para los 3 años en consideración, podemos ver que no hay mucha variación entre el comportamiento de estas a lo largo del tiempo, vemos que en particular, tanto el monto de costo y gasto promedio (mediana) es constante para los 3 años, aunque se nota un aumento en los costos en el año 2018 para el caso de algunas empresas. Ademas, vemos para que caso de los Costos, las mismas 2 empresas (relacionadas a los NITs 860009694 y 900378893) fueron las que presentaron un maypr valor de costos en los 3 periodos, por lo que el boxplot los considera registros outliers. Mirando la distribución de los gatos, notamos que una empresa tuvo los gastos mas altos en los 3 periodos (relacionadas al NIT 801002644) pero adicional, en el último año, la empresa con el NIT 800015615 tuvo un aumento en sus gastos, por lo que es considerado también como un outlier por el boxplot.
+
+Pasando a la distribución de las variables de diferencia de costos y gastos, vemos para ambos casos los registros outliers son aquellos que tienen un valor negativo en su diferencia. Podemos ver que para el caso del 2016 en la variable costos, las empresas outliers fueron las correspondiente a los NITs 801002644, 806014553, 890909034, 900378893, 900437650, de estas, la unica que no presenta una diferencia negativa fue la primera (801002644), por lo que puede indicar un aumento considerable (raro) en el mercado en término de los costos de venta, mientras que todas las otras empresas presentaron una disminusión considerable en este mismo concepto. Para el caso del 2017, solo una empresa fue considerada como outlier (801002644), la cual apareció en el 2016 y en este caso, tenemos que sus costos de venta aumentaron del 2016 al 2017, lo que también indica, que el comportamiento del cambio de los costos para el 2017, fueron "normales" para las demás empresas. Mirando el comportamiento en el 2018, encontramos a las empresas 806014553, 860009694, 890300012, lo cual nos indica que nuevamente la empresa que tuvo aumentos considerables en los últimmos años (860009694), también los tuvo en el 2018, ahora acompañado de otra empresa (806014553), la cual también tuvo un aumento considerable en los costos en comparación de las demás empresas. Ahora bien, aparece una empresa que tuvo una baja considerable (fuera de lo normal) en dicho concepto, lo cual la hace aparecer como un registro outlier (890300012).
+
+Ahora mirando la variable de diferencia de gastos, solamente 3 empresas tienen comportamientos grandes en estas diferencias, asi la empresa 806014553 es la que reporta un cambio grande (negativo) en sus gastos, lo que indica que los gastos de venta fueron mucho menores en el 2016 a comparación del 2015, mientras que las empresas con NIT 801002644, 890904459 reportan un aumento en esta diferencia. En particular vemos que aparece la empresa 801002644, la cual vimos que tuvo un aumento en sus costos durante los 3 periodos analizados, y ahora presenta un aumento de gatos. Para el año 2017, se tuvo un aumento en la cantidad de empresas que variaron considerablemente sus gastos de ventas, asi tenemos que las empresas con los NITs 800015615, 801002644, 805012368 fueron las que presentaron un incremento (Note nuevamente la empresa 801002644), mientras que 4 presentaron una disminución en sus gastos (empresas con los NITs 806014553, 830037495, 860050956, 890311366, 900378893). Por último, para el año 2018, tenemos 3 empresas con estos cambios atipicos en sus gastos de venta, tenemos asi que las empresas con NITs 800236890, 806014553 son las que presentaron un incremento en dicha variable, mientras que la empresa 890311366 fue la única que presentó una disminusión considerable en sus gastos. Adicional a esto, vemos que la empresa que tiempre aumentó sus costos además de sus gastos en los últimos años, para el 2018 tuvo un cambio "normal" en sus gastos en comparación a las demás empresas.
+
 
 
 
@@ -209,19 +235,24 @@ p3 = grafica(data, "Costo.de.ventas" , "Gastos.de.ventas")
 ```{r}
 data_aux = select(all_data,select = -starts_with('NIT'))
 
-empresas_train = c(800015615, 800045720, 800081030,
-                   800112440, 800118660, 800157469, 800232356,
-                   800236890, 801002644, 805012368, 806014553,
-                   830030574, 830037495, 860009694, 860050956,
-                   890300012, 890311366, 890909034, 900173460, 
-                   900234565, 900364670, 900437650)
+empresas_train = c(800015615, 800045720,
+                   800081030, 800112440,
+                   800118660, 800157469,
+                   800232356, 800236890,
+                   801002644, 805012368,
+                   830030574, 860009694,
+                   860030360, 860050956,
+                   890117431, 890311366,
+                   890904459, 900173460,
+                   900184722, 900234565,
+                   900364670, 900389088)
 
-empresas_test = c(830052054, 860030360,
-                   860033653, 860501682,
-                   890117431, 890904459,
-                   890929951, 900184722,
+empresas_test = c(806014553, 830037495,
+                   830052054, 860033653,
+                   860501682, 890300012,
+                   890909034, 890929951,
                    900204182, 900378893,
-                   900389088)
+                   900437650)
 
 train = all_data$NIT%in%empresas_train
 test = all_data$NIT%in%empresas_test
@@ -281,12 +312,12 @@ abline(a=0, b=1, lwd = 2, col = 'red')
 par(mfrow=c(3,2))
 mod_plot = plot(mod_lin, which = c(1:6))
 ```
-
-De los gráficos anteriores, en particular analizando el valor de la distancia de Cook para las observaciones, notamos que las observaciones 9, 22, 58 son candidatas a ser registros atípicos en el conjunto de datos, por lo que entrenaremos un nuevo modelo eliminando estos registros. Notar que el tercer registro coincide con la empresa de NIT 860009694 para elaño 2018, lo cual coincide con uno de los registros raros encontrados en la sección descriptiva utilizando el boxplot.
+### REVISAR ESTE ANALISIS
+De los gráficos anteriores, en particular analizando el valor de la distancia de Cook para las observaciones, notamos que las observaciones 9, 31, 58 son candidatas a ser registros atípicos en el conjunto de datos, por lo que entrenaremos un nuevo modelo eliminando estos registros. Notar que el tercer registro coincide con la empresa de NIT 860009694 para elaño 2018, lo cual coincide con uno de los registros raros encontrados en la sección descriptiva utilizando el boxplot.
 
 ```{r}
 ### Vector para eliminar registros atipicos
-outliers = c(9, 22, 58)
+outliers = c(9, 31, 58)
 data_train_z_noOut = data_train_z[-outliers,]
 ```
 
@@ -306,7 +337,7 @@ plot(hatvalues(mod_lin),las=1,xlab="i",ylab="hii",main="Influencia (h_ii)",type=
 ## Entrenamiento del modelo sin Outliers
 
 ```{r}
-mod_lin02 = lm('Costo.de.ventas_dif~PIB+TRM', data = data_train_z_noOut)
+mod_lin02 = lm('Costo.de.ventas_dif~PIB+TRM+Desempleo+Inflacion+Tasa_Intervencion+Balance_CC+Balance_Fiscal', data = data_train_z_noOut)
 ```
 
 ```{r}
@@ -345,7 +376,8 @@ Vamos a encontrar el parametri de regulairzacion
 ```{r}
 library(glmnet)
 
-f1 = formula('Costo.de.ventas_dif~-1+Balance_CC+Desempleo+Inflacion+PIB+Tasa_Intervencion+TRM')
+f1 = formula('Costo.de.ventas_dif~-1+PIB+TRM+Desempleo+Inflacion+Tasa_Intervencion+Balance_CC+Balance_Fiscal')
+
 
 X = model.matrix(f1, data = as.data.frame(data_train_z))
 Y = data_train_z$Costo.de.ventas
@@ -390,9 +422,36 @@ plot(preds,data_test_z$Costo.de.ventas_dif)
 abline(a=0, b=1, lwd = 2, col = 'red')
 ```
 
+
+```{r}
+## Generalized linear model Lasso
+#glm_obj <- glmmLasso(Costo.de.ventas~TRM+PIB+Balance_CC+Desempleo+Balance_Fiscal, rnd = list(NIT=~1+PIB), data = data_train_z, lambda=0.9, family = gaussian(link ="identity"))
+#summary(glm_obj)
+```
+
+
+```{r}
+#preds = predict(glm_obj, data = data_train_z)
+#plot(preds,data_train_z$Costo_de_ventas)
+#abline(a=0, b=1, lwd = 2, col = 'red')
+```
+
+
+```{r}
+infl <- influence(mod_me, obs = TRUE)
+cooks.distance(infl)
+plot(infl, which = "cook")
+
+```
+
+
 ```{r}
 plot(all_data$Year, all_data$Costo.de.ventas, col=all_data$NIT, xlab = "Año", ylab = "Valor del Costo de Venta por Empresa")
 ```
+
+
+
+
 
 
 
