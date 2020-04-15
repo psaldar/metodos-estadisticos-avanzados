@@ -33,7 +33,7 @@ La cementera
 ## Consolidación de Información
 
 ```{r}
-all_data = read.csv("PreparacionDatos/Data/consolidado_info.csv", encoding="UTF-8")
+all_data = read.csv("PreparacionDatos/Datos_completos.csv", encoding="UTF-8")
 NIT = all_data['NIT'] 
 data = all_data[,-c(1,2)]
 ```
@@ -80,18 +80,18 @@ kable(formatC(median_data,,format = "e", digits = 2))
 
 ```{r}
 par(mfrow=c(1,2))
-bxplot_costos = boxplot(Costo_de_ventas~YEAR, data = all_data)
-bxplot_gastos = boxplot(Gastos_de_ventas~YEAR, data = all_data)
+bxplot_costos = boxplot(Costo.de.ventas~Year, data = all_data)
+bxplot_gastos = boxplot(Gastos.de.ventas~Year, data = all_data)
 ```
 
 ```{r}
 ### Outliers para costos
-kable(all_data[(all_data$Costo_de_ventas %in% bxplot_costos$out),]$NIT)
+kable(all_data[(all_data$Costo.de.ventas %in% bxplot_costos$out),]$NIT)
 ```
 
 ```{r}
 ### Outliers para gastos
-kable(all_data[(all_data$Gastos_de_ventas %in% bxplot_gastos$out),]$NIT)
+kable(all_data[(all_data$Gastos.de.ventas %in% bxplot_gastos$out),]$NIT)
 ```
 
 #### Analisis:
@@ -193,31 +193,35 @@ grafica = function(data, name1, name2){
 ```
 
 ```{r}
-p1 = grafica(data, "trm", "pib")
+p1 = grafica(data, "TRM", "PIB")
 ```
 
 ```{r}
-p2 = grafica(data, "Costo_de_ventas" , "Costo_de_ventas_dif")
+p2 = grafica(data, "Costo.de.ventas" , "Costo.de.ventas_dif")
 ```
 
 ```{r}
-p3 = grafica(data, "Costo_de_ventas" , "Gastos_de_ventas")
+p3 = grafica(data, "Costo.de.ventas" , "Gastos.de.ventas")
 ```
 
 ### Creacion de modelos
 
 ```{r}
 data_aux = select(all_data,select = -starts_with('NIT'))
-set.seed(42)
 
-empresas = unique(all_data$NIT)
+empresas_train = c(800015615, 800045720, 800081030,
+                   800112440, 800118660, 800157469, 800232356,
+                   800236890, 801002644, 805012368, 806014553,
+                   830030574, 830037495, 860009694, 860050956,
+                   890300012, 890311366, 890909034, 900173460, 
+                   900234565, 900364670, 900437650)
 
-smp_size <- floor(0.75 * length(empresas) )
-
-idx_train = sample(seq_len(length(empresas)), size = smp_size)
-
-empresas_train = empresas[idx_train]
-empresas_test = empresas[-idx_train]
+empresas_test = c(830052054, 860030360,
+                   860033653, 860501682,
+                   890117431, 890904459,
+                   890929951, 900184722,
+                   900204182, 900378893,
+                   900389088)
 
 train = all_data$NIT%in%empresas_train
 test = all_data$NIT%in%empresas_test
@@ -246,7 +250,7 @@ data_test_z$NIT = NIT_test
 ### Modelo Lineal General
 
 ```{r}
-mod_lin = lm('Costo_de_ventas~pib+trm', data = data_train_z)
+mod_lin = lm('Costo.de.ventas_dif~PIB+TRM', data = data_train_z)
 ```
 
 ```{r}
@@ -258,14 +262,14 @@ En el conjunto de entrenamiento:
 ```{r}
 preds = predict(mod_lin)
 
-plot(preds, data_train_z$Costo_de_ventas, xlab = 'Valor predicho', ylab = 'Valor Real')
+plot(preds, data_train_z$Costo.de.ventas_dif, xlab = 'Valor predicho', ylab = 'Valor Real')
 abline(a=0, b=1, lwd = 2, col = 'red')
 ```
 
 En el conjunto de Prueba
 ```{r}
 preds_test = predict(mod_lin, newdata = data_test_z)
-plot(preds_test, data_test_z$Costo_de_ventas, xlab = 'Valor predicho', ylab = 'Valor Real')
+plot(preds_test, data_test_z$Costo.de.ventas_dif, xlab = 'Valor predicho', ylab = 'Valor Real')
 abline(a=0, b=1, lwd = 2, col = 'red')
 ```
 
@@ -300,7 +304,7 @@ plot(hatvalues(mod_lin),las=1,xlab="i",ylab="hii",main="Influencia (h_ii)",type=
 ## Entrenamiento del modelo sin Outliers
 
 ```{r}
-mod_lin02 = lm('Costo_de_ventas~pib+trm', data = data_train_z_noOut)
+mod_lin02 = lm('Costo.de.ventas_dif~PIB+TRM', data = data_train_z_noOut)
 ```
 
 ```{r}
@@ -314,14 +318,14 @@ En el conjunto de entrenamiento:
 ```{r}
 preds = predict(mod_lin02)
 
-plot(preds, data_train_z_noOut$Costo_de_ventas, xlab = 'Valor predicho', ylab = 'Valor Real')
+plot(preds, data_train_z_noOut$Costo.de.ventas_dif, xlab = 'Valor predicho', ylab = 'Valor Real')
 abline(a=0, b=1, lwd = 2, col = 'red')
 ```
 
 En el conjunto de Prueba
 ```{r}
 preds_test = predict(mod_lin02, newdata = data_test_z)
-plot(preds_test, data_test_z$Costo_de_ventas, xlab = 'Valor predicho', ylab = 'Valor Real')
+plot(preds_test, data_test_z$Costo.de.ventas_dif, xlab = 'Valor predicho', ylab = 'Valor Real')
 abline(a=0, b=1, lwd = 2, col = 'red')
 ```
 
@@ -339,10 +343,10 @@ Vamos a encontrar el parametri de regulairzacion
 ```{r}
 library(glmnet)
 
-f1 = formula('Costo_de_ventas~-1+balance_fiscal+desempleo+inflacion+pib+tasa_intervencion+trm')
+f1 = formula('Costo.de.ventas_dif~-1+Balance_CC+Desempleo+Inflacion+PIB+Tasa_Intervencion+TRM')
 
 X = model.matrix(f1, data = as.data.frame(data_train_z))
-Y = data_train_z$Costo_de_ventas
+Y = data_train_z$Costo.de.ventas
 
 lambda_grid = 10^seq(1,-2,length.out = 100)
 modelo_regularizacion = cv.glmnet(x = X, y = Y, lambda = lambda_grid)
@@ -363,8 +367,8 @@ coef(mod_lin_reg)
 
 ```{r}
 
-#mod_me = lmer('Costo_de_ventas~Gastos_de_ventas+(Gastos_de_ventas|NIT)', data = data_train_z)
-mod_me = lmer('Costo_de_ventas~pib+(pib|NIT)', data = data_train_z)
+#mod_me = lmer('Costo.de.ventas_dif~Gastos_de_ventas+(Gastos_de_ventas|NIT)', data = data_train_z)
+mod_me = lmer('Costo.de.ventas_dif~PIB+(PIB|NIT)', data = data_train_z)
 ```
 
 ```{r}
@@ -374,18 +378,18 @@ plot(mod_me, which = c(1:6))
 
 ```{r}
 preds = predict(mod_me)
-plot(preds,data_train_z$Costo_de_ventas)
+plot(preds,data_train_z$Costo.de.ventas_dif)
 abline(a=0, b=1, lwd = 2, col = 'red')
 ```
 
 ```{r}
 preds = predict(mod_me, newdata = data_test_z,allow.new.levels=TRUE)
-plot(preds,data_test_z$Costo_de_ventas)
+plot(preds,data_test_z$Costo.de.ventas_dif)
 abline(a=0, b=1, lwd = 2, col = 'red')
 ```
 
 ```{r}
-plot(all_data$YEAR, all_data$Costo_de_ventas, col=all_data$NIT, xlab = "Año", ylab = "Valor del Costo de Venta por Empresa")
+plot(all_data$Year, all_data$Costo.de.ventas, col=all_data$NIT, xlab = "Año", ylab = "Valor del Costo de Venta por Empresa")
 ```
 
 
