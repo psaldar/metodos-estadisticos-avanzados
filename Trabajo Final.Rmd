@@ -230,6 +230,7 @@ NIT_train = NIT[train,]
 NIT_test = NIT[test,]
 
 data_train = data_aux[train,]
+rownames(data_train) <- NULL
 data_train_z = scale(data_train, center = TRUE, scale = TRUE)
 
 media_tr = attr(data_train_z, 'scaled:center')
@@ -238,6 +239,7 @@ stdev_tr = attr(data_train_z, 'scaled:scale')
 data_train_z = as.data.frame(data_train_z)
 
 data_test = data_aux[test,]
+rownames(data_test) <- NULL
 data_test_z = as.data.frame(scale(data_test,  center = media_tr, scale = stdev_tr))
 
 data_train_z$NIT = NIT_train
@@ -250,7 +252,7 @@ data_test_z$NIT = NIT_test
 ### Modelo Lineal General
 
 ```{r}
-mod_lin = lm('Costo.de.ventas_dif~PIB+TRM', data = data_train_z)
+mod_lin = lm('Costo.de.ventas_dif~PIB+TRM+Desempleo+Inflacion+Tasa_Intervencion+Balance_CC+Balance_Fiscal', data = data_train_z)
 ```
 
 ```{r}
@@ -280,11 +282,11 @@ par(mfrow=c(3,2))
 mod_plot = plot(mod_lin, which = c(1:6))
 ```
 
-De los gráficos anteriores, en particular analizando el valor de la distancia de Cook para las observaciones, notamos que las observaciones 15, 31, 48 y 64 son candidatas a ser registros atípicos en el conjunto de datos, por lo que entrenaremos un nuevo modelo eliminando estos registros. Notar que estos registros coinciden con las empresas con NIT 860009694 y 900378893 para los años 2016 y 2017, lo cual coincide con los registros raros encontrados en la sección descriptiva utilizando el boxplot
+De los gráficos anteriores, en particular analizando el valor de la distancia de Cook para las observaciones, notamos que las observaciones 9, 22, 58 son candidatas a ser registros atípicos en el conjunto de datos, por lo que entrenaremos un nuevo modelo eliminando estos registros. Notar que el tercer registro coincide con la empresa de NIT 860009694 para elaño 2018, lo cual coincide con uno de los registros raros encontrados en la sección descriptiva utilizando el boxplot.
 
 ```{r}
 ### Vector para eliminar registros atipicos
-outliers = c(15, 31, 48, 64)
+outliers = c(9, 22, 58)
 data_train_z_noOut = data_train_z[-outliers,]
 ```
 
