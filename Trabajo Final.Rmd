@@ -291,7 +291,8 @@ data_test_z$NIT = NIT_test
 ```
 
 ```{r}
-r2_score <- function (x, y) cor(x, y) ^ 2
+r2_score <- function(x, y) summary(lm(y~x))$r.squared
+adj_r2_score <- function(x, y) summary(lm(y~x))$adj.r.squared
 ```
 
 ## Modelo para los Costos
@@ -315,6 +316,13 @@ plot(preds, data_train_z$Costo.de.ventas_dif, xlab = 'Valor predicho', ylab = 'V
 abline(a=0, b=1, lwd = 2, col = 'red')
 ```
 
+Llevando los resultado previos a la escala original es claro como evaluación del modelo en el conjunto de entrenamiento se distribuye entre tres conjuntos de empresas, primero, aquellas con diferencia en sus costos de venta son ocupados en mayor proporción por valores negativos, otra srgunda donde permanecen en montos bajos y finalmente la tercera donde las diferencias en el costo son mayores que el resto. Si bien los resultados claramente no son satisfactorios nótese que el modelo no entrega valores absurdos, en tanto su valor máximo dado por \$2.699.228 se mantiene por debajo de \$36.609.681 que es el valor real, así mismo con su mínimo dado por -\$985489.8, el cual resulta por encima de su respectivo valor real de -\$17.903.909.
+
+```{r}
+plot(preds*stdev_tr['Costo.de.ventas_dif']+media_tr['Costo.de.ventas_dif'], 
+     data_train_z$Costo.de.ventas_dif*stdev_tr['Costo.de.ventas_dif']+media_tr['Costo.de.ventas_dif'], xlab = 'Valor predicho', ylab = 'Valor Real')
+abline(a=0, b=1, lwd = 2, col = 'red')
+```
 En el conjunto de Prueba
 ```{r}
 preds_test = predict(mod_lin, newdata = data_test_z)
@@ -322,9 +330,19 @@ plot(preds_test, data_test_z$Costo.de.ventas_dif, xlab = 'Valor predicho', ylab 
 abline(a=0, b=1, lwd = 2, col = 'red')
 ```
 
-Medida de r2 para este modelo es:
+La situación vista en el conjunto de entrenamiento no se replica en el de testeo como se puede apreciar en la imagen, donde los valores predichos se encuentran en cuadrantes números considerablemente apartados de los reales; no obstante, las cifras aún son razonables dentro de los parámetros.
+
+```{r}
+plot(preds_test*stdev_tr['Costo.de.ventas_dif']+media_tr['Costo.de.ventas_dif'], 
+     data_test_z$Costo.de.ventas_dif*stdev_tr['Costo.de.ventas_dif']+media_tr['Costo.de.ventas_dif'], xlab = 'Valor predicho', ylab = 'Valor Real')
+abline(a=0, b=1, lwd = 2, col = 'red')
+```
+
+
+Medidas de (r2, r2_adj) para este modelo es:
 ```{r}
 r2_model<-r2_score(preds_test, data_test_z$Costo.de.ventas_dif)
+adj_r2_model<-adj_r2_score(preds_test, data_test_z$Costo.de.ventas_dif)
 ```
 
 ### Graficos de Evaluacion de modelos
@@ -376,6 +394,14 @@ plot(preds, data_train_z_noOut$Costo.de.ventas_dif, xlab = 'Valor predicho', yla
 abline(a=0, b=1, lwd = 2, col = 'red')
 ```
 
+Retirando los outliers en el caso de entrenamiento afortunadamente la razonabilidad de los valores predichos se conserva, donde se puede observar que aunque se encuentran considerablemente desfasados de los reales se mantienen entre rangos aceptables.
+
+```{r}
+plot(preds*stdev_tr['Costo.de.ventas_dif']+media_tr['Costo.de.ventas_dif'], 
+     data_train_z_noOut$Costo.de.ventas_dif*stdev_tr['Costo.de.ventas_dif']+media_tr['Costo.de.ventas_dif'], xlab = 'Valor predicho', ylab = 'Valor Real')
+abline(a=0, b=1, lwd = 2, col = 'red')
+```
+
 En el conjunto de Prueba
 ```{r}
 preds_test = predict(mod_lin02, newdata = data_test_z)
@@ -383,9 +409,18 @@ plot(preds_test, data_test_z$Costo.de.ventas_dif, xlab = 'Valor predicho', ylab 
 abline(a=0, b=1, lwd = 2, col = 'red')
 ```
 
-Medida de r2 para este modelo es:
+La tendencia a generar valores considerablemente menores a los reales por este modelo se replica con el conjunto de testeo, donde las diferencias de los costos de venta se alejan mucho más de los reales hasta a una escala de 10^5, lo que pone en duda la razonabilidad por este lado.
+
+```{r}
+plot(preds_test*stdev_tr['Costo.de.ventas_dif']+media_tr['Costo.de.ventas_dif'], 
+     data_test_z$Costo.de.ventas_dif*stdev_tr['Costo.de.ventas_dif']+media_tr['Costo.de.ventas_dif'], xlab = 'Valor predicho', ylab = 'Valor Real')
+abline(a=0, b=1, lwd = 2, col = 'red')
+```
+
+Medidas de (r2, r2_adj) para este modelo es:
 ```{r}
 r2_model<-r2_score(preds_test, data_test_z$Costo.de.ventas_dif)
+adj_r2_model<-adj_r2_score(preds_test, data_test_z$Costo.de.ventas_dif)
 ```
 
 
@@ -463,7 +498,13 @@ plot(preds,data_train_z$Costo.de.ventas_dif)
 abline(a=0, b=1, lwd = 2, col = 'red')
 ```
 
- 
+Considerando esta clase de modelos se puede observar la captura de la tendencia generada por los montos de diferencia de costos de ventas de acuerdo a los tamaños de las empresas consideradas, donde para algunas pocas los valores predichos naturalmente exceden los del resto, tanto en el sentido positivo como en el negativo, lo cual es esperado. Este nuevo ajuste, influenciado por el PIB, es el más natural en el mercado, dada la correlación entre éste y la medida de salida.
+
+```{r}
+plot(preds*stdev_tr['Costo.de.ventas_dif']+media_tr['Costo.de.ventas_dif'], 
+     data_train_z$Costo.de.ventas_dif*stdev_tr['Costo.de.ventas_dif']+media_tr['Costo.de.ventas_dif'])
+abline(a=0, b=1, lwd = 2, col = 'red')
+```
 
 ```{r}
 preds = predict(mod_me, newdata = data_test_z,allow.new.levels=TRUE)
@@ -471,6 +512,13 @@ plot(preds,data_test_z$Costo.de.ventas_dif)
 abline(a=0, b=1, lwd = 2, col = 'red')
 ```
 
+Desafortunadamente en el caso de prueba no se logra distinguir la tendencia natural en el comportamiento de la diferencia de los costos de venta y la escala se encuentra muy distante entre los valores predichos y los reales, como se espera desde el gráfico anterior. En esta evaluación los valores predichos se ponderan para generar una tendencia casi constante y la razonabilidad una vez más se pone en duda, aunque no por completo, dado que éstos valores efectivamente pueden ser alcanzados con condiciones ligeramente diferentes.
+
+```{r}
+plot(preds*stdev_tr['Costo.de.ventas_dif']+media_tr['Costo.de.ventas_dif'], 
+     data_test_z$Costo.de.ventas_dif*stdev_tr['Costo.de.ventas_dif']+media_tr['Costo.de.ventas_dif'])
+abline(a=0, b=1, lwd = 2, col = 'red')
+```
  
 
 ```{r}
@@ -487,12 +535,21 @@ plot(preds,data_train_z$Costo.de.ventas_dif)
 abline(a=0, b=1, lwd = 2, col = 'red')
 ```
 
+Bajo esta aplicación del modelo Lasso es claro como ya se presenta una mejor distribución de los valores predichos contra los reales y éste es un comportamiento más natural y razonable en la industria, donde si bien hay un par que se alejan del común respecto a las diferencias en los costos de venta, el resto dentro de sus segmentos también puede tener distribuciones similares teniendo en cuenta sus montos.
+
+```{r}
+plot(preds*stdev_tr['Costo.de.ventas_dif']+media_tr['Costo.de.ventas_dif'], 
+     data_train_z$Costo.de.ventas_dif*stdev_tr['Costo.de.ventas_dif']+media_tr['Costo.de.ventas_dif'])
+abline(a=0, b=1, lwd = 2, col = 'red')
+```
 
 ```{r}
 r2_model_train<-r2_score(preds, data_train_z$Costo.de.ventas_dif)
+adj_r2_model_train<-adj_r2_score(preds, data_train_z$Costo.de.ventas_dif)
 mse_train = mean((data_train_z$Costo.de.ventas_dif - preds)^2)
 
 print(r2_model_train)
+print(adj_r2_model_train)
 print(mse_train)
 ```
 
@@ -503,7 +560,13 @@ plot(preds,data_test_z$Costo.de.ventas_dif)
 abline(a=0, b=1, lwd = 2, col = 'red')
 ```
 
- 
+Como se presenta a continuación en esta oportunidad se captura algo de la relación positiva entre los valores predichos y los reales. Exceptuando los valores atipicos la razonabilidad se pone en duda debido al sentido de los signos y la propensión de éstos modelos a entregar resultados en escalas menores a las esperadas.
+
+```{r}
+plot(preds*stdev_tr['Costo.de.ventas_dif']+media_tr['Costo.de.ventas_dif'], 
+     data_test_z$Costo.de.ventas_dif*stdev_tr['Costo.de.ventas_dif']+media_tr['Costo.de.ventas_dif'])
+abline(a=0, b=1, lwd = 2, col = 'red')
+``` 
 
 
 ```{r}
@@ -519,8 +582,11 @@ plot(infl, which = "cook")
 
 ```{r}
 r2_model_test<-r2_score(preds, data_test_z$Costo.de.ventas_dif)
+adj_r2_model_test<-adj_r2_score(preds, data_test_z$Costo.de.ventas_dif)
 mse_test = mean((data_test_z$Costo.de.ventas_dif - preds)^2)
+
 print(r2_model_test)
+print(adj_r2_model_test)
 print(mse_test)
 ```
 
@@ -553,10 +619,22 @@ preds = predict(glm_obj_s, data = data_train_z_sinoutl)
 plot(preds,data_train_z_sinoutl$Costo.de.ventas_dif)
 abline(a=0, b=1, lwd = 2, col = 'red')
 ```
+
+Aplicando la remoción de outliers la distribución hacia el centro de los datos se extiende más y esto es deseado, y la escala no se ve demasiado afectada por la corrección. En términos de mercado esta clase de resultados es la más natural y razonable entre todas, donde es claro como los indicadores macro-economicos pueden afectar de manera diferente a cada componente que representa la industria.
+
+```{r}
+plot(preds*stdev_tr['Costo.de.ventas_dif']+media_tr['Costo.de.ventas_dif'], 
+     data_train_z_sinoutl$Costo.de.ventas_dif*stdev_tr['Costo.de.ventas_dif']+media_tr['Costo.de.ventas_dif'])
+abline(a=0, b=1, lwd = 2, col = 'red')
+```
+
 ```{r}
 r2_model_train_sinoutl<-r2_score(preds, data_train_z_sinoutl$Costo.de.ventas_dif)
+adj_r2_model_train_sinoutl<-adj_r2_score(preds, data_train_z_sinoutl$Costo.de.ventas_dif)
 mse_sinoutl = mean((data_train_z_sinoutl$Costo.de.ventas_dif - preds)^2)
+
 print(r2_model_train_sinoutl)
+print(adj_r2_model_train_sinoutl)
 print(mse_sinoutl)
 ```
 
@@ -567,11 +645,23 @@ preds = predict(glm_obj_s, newdata = data_test_z)
 plot(preds,data_test_z$Costo.de.ventas_dif)
 abline(a=0, b=1, lwd = 2, col = 'red')
 ```
+
+Probando con el conjunto de testeo puede verse en comparación al resultado en test del modelo anterior que la distorsión se evidencia hacia los valores mayores en el conjunto predicho y el sentido de los signos, lo que le reduce razonabilidad. Sobre el efecto de escala éste se esperaba dado el resultado en el set de entrenamiento.
+
+```{r}
+plot(preds*stdev_tr['Costo.de.ventas_dif']+media_tr['Costo.de.ventas_dif'], 
+     data_test_z$Costo.de.ventas_dif*stdev_tr['Costo.de.ventas_dif']+media_tr['Costo.de.ventas_dif'])
+abline(a=0, b=1, lwd = 2, col = 'red')
+```
+
+
 ```{r}
 r2_model_test_sinoutl<-r2_score(preds, data_test_z$Costo.de.ventas_dif)
+adj_r2_model_test_sinoutl<-adj_r2_score(preds, data_test_z$Costo.de.ventas_dif)
 mse_sinoutl_test = mean((data_test_z$Costo.de.ventas_dif - preds)^2)
 
 print(r2_model_test_sinoutl)
+print(adj_r2_model_test_sinoutl)
 print(mse_sinoutl_test)
 ```
 
@@ -626,9 +716,11 @@ abline(a=0, b=1, lwd = 2, col = 'red')
 ```
 ```{r}
 r2_model_train_new<-r2_score(preds, data_train_z$Costo.de.ventas_dif)
+adj_r2_model_train_new<-adj_r2_score(preds, data_train_z$Costo.de.ventas_dif)
 mse_new = mean((data_train_z$Costo.de.ventas_dif - preds)^2)
 
 print(r2_model_train_new)
+print(adj_r2_model_train_new)
 print(mse_new)
 ```
 
@@ -639,9 +731,11 @@ abline(a=0, b=1, lwd = 2, col = 'red')
 ```
 ```{r}
 r2_model_test_new<-r2_score(preds, data_test_z$Costo.de.ventas_dif)
+adj_r2_model_test_new<-adj_r2_score(preds, data_test_z$Costo.de.ventas_dif)
 mse_new_test = mean((data_test_z$Costo.de.ventas_dif - preds)^2)
 
 print(r2_model_test_new)
+print(adj_r2_model_test_new)
 print(mse_new_test)
 ```
 
@@ -659,9 +753,11 @@ abline(a=0, b=1, lwd = 2, col = 'red')
 ```
 ```{r}
 r2_model_train_new<-r2_score(preds, data_train_z$Costo.de.ventas_dif)
+adj_r2_model_train_new<-adj_r2_score(preds, data_train_z$Costo.de.ventas_dif)
 mse_new = mean((data_train_z$Costo.de.ventas_dif - preds)^2)
 
 print(r2_model_train_new)
+print(adj_r2_model_train_new)
 print(mse_new)
 ``` 
 
@@ -672,16 +768,10 @@ abline(a=0, b=1, lwd = 2, col = 'red')
 ```
 ```{r}
 r2_model_test_new<-r2_score(preds, data_test_z$Costo.de.ventas_dif)
+adj_r2_model_test_new<-adj_r2_score(preds, data_test_z$Costo.de.ventas_dif)
 mse_new_test = mean((data_test_z$Costo.de.ventas_dif - preds)^2)
 
 print(r2_model_test_new)
+print(adj_r2_model_test_new)
 print(mse_new_test)
 ```
-
-
-
-
-
-
-
-
