@@ -26,38 +26,21 @@ library(influence.ME)
 
 ## Introduccion
 
-La intro
+El modelamiento del comportamiento de diferentes variables es un tema que ha sido estudiado en sectores energéticos, industriales, económicos y financieros. De allí se comienza a apreciar tanto la importancia que tienen los datos hoy en día al igual que las técnicas utilizadas para su modelamiento. La estadística es una disciplina que se preocupa por la recolección, organización, interpretación y análisis de datos, que, según su aplicación puede traer un gran impacto en la industria al momento de la toma de decisiones. En particular, diferentes técnicas estadísticas han sido utilizadas en el sector financiero, las cuales permiten modelar comportamiento de los clientes, acciones, entre otras variables.
+
+Diferentes industrias dentro de su funcionamiento, deben presentar ante la superintendencia información relacionando los gastos y ventas que presentaron anualmente. Además, se presume que del mercado colombiano, como en los procesos de las industria está esa interacción con todo el mercado, es posible pensar que exista una relación entre las diferentes variables macroeconomicas (ej. PIB, TRM, Balance Fiscal, Indice de Desempleo, etc.) y estos montos de costos y gastos de las empresas. Debido a la cantidad de información con la que se cuenta (información de costos y gastos para diferentes empresas en colombia entre los años 2016 y 2018), se sabe que no se cuenta con información suficiente para la construcción de un modelo por empresa que permita ver la relación existente entre las variables macroeconómicas y las variables asociadas a costos y gastos de ventas. Por lo anterior, es posible considerar un conjunto de datos como la consolidación de la información de todas las empresas junto con la información macroeconomica para los años en estudio, así buscando construir un modelo general para realizar la modelación de estas variables reportadas ante la superintendencia para un conjunto de empresas cuya industria sea similar.
+
+Por lo tanto, para el conjunto de datos meniconado anteriormente, se buscará modelar la información de costos y gastos de venta a partir de las variables macroeconomicas disponibles, al igual que analizar si al realizar alguna transformación a dichas variables resulta relevante al momento de la creación del modelo. Se utilizarán modelos lineales, comenzando con la evaluación del modelo lineal general, hasta la aplicación de modelos de efectos mixtos. Esta última estructura de modelos, es bastante usado al momento de tener individuos que comparten la misma información pero tienen una salida diferente (en nuestro caso, todas las empresas comparten la misma información de las variables macroeconómicas), por lo que utilizar este tipo de modelos resulta de gran interés ya que permite modelar tanto efectos a nivel de individuo como agregando un efecto aleatorio.
 
 ## Clasificación Industrial Seleccionada
 
-El sector de la construcción es uno de los más relevantes en la economía 
-colombiana. En nuestro contexto nacional el sector es considerado como uno de 
-los más vitales para el desarrollo del país y representa uno de los más 
-importantes rubros en materia de produccción interna componiendo cada año de 6
-a 7 por ciento del producto interno bruto total y hasta un 7.1% del total de ocupados
-a nivel nacional. Dicho sector es caracterizado
-por sus fluctuaciones estacionarias fuertemente influenciadas por los planes
-de infraestructura de gran escala y los planes de gobierno. Respecto al último trimestre de 2019 tuvo un
-aumento de 3.4%, uno de los más altos a nivel de america latina.
+El sector de la construcción es uno de los más relevantes en la economía colombiana. En nuestro contexto nacional el sector es considerado como uno de los más vitales para el desarrollo del país y representa uno de los más importantes rubros en materia de produccción interna componiendo cada año de 6 a 7 por ciento del producto interno bruto total y hasta un 7.1% del total de ocupados a nivel nacional. Dicho sector es caracterizado por sus fluctuaciones estacionarias fuertemente influenciadas por los planes de infraestructura de gran escala y los planes de gobierno. Respecto al último trimestre de 2019 tuvo un aumento de 3.4%, uno de los más altos a nivel de america latina.
 
-Si bien las estimaciones globales para el año 2020 en Colombia para esta industria eran
-positivas, la coyuntura del COVID-19 ha de perturbar fuertemente el sector, 
-afectando fuertemente a los importadores de materiales y a la demanada frente a los
-retrasos en la ejecución de obras. Desde enero el sector de la producción de concreto
-ya estaba presentando caídas significativas de hasta un 8.3% respecto al año pasado en el
-mismo mes, por lo que se esperan peores resultados al cierre del segundo trimestre
-del año presente. Muchas compañías planearon incrementos en sus precios, con la esperanza de
-generar mayores ingresos, pero dichos planes han de ser postergados bajo la actual coyuntura.
-La demanda, el driver más relevante en la industria, claramente se ve desplazado
-efecto del impedimento de comercialización y la paralisis en el país bajo las medidas de cuarentena
-nacional. Un punto importante es que algunas compañías del sector podrán seguir
-con sus actividades producto de la inclusión de actividades de infraestructura como
-vital durante la crisis del COVID-19.
+Si bien las estimaciones globales para el año 2020 en Colombia para esta industria eran positivas, la coyuntura del COVID-19 ha de perturbar fuertemente el sector,  afectando con alto impacto a los importadores de materiales y a la demanada frente a los retrasos en la ejecución de obras. Desde enero el sector de la producción de concreto
+ya estaba presentando caídas significativas de hasta un 8.3% respecto al año pasado en el mismo mes, por lo que se esperan peores resultados al cierre del segundo trimestre del año presente. Muchas compañías planearon incrementos en sus precios, con la esperanza de generar mayores ingresos, pero dichos planes han de ser postergados bajo la actual coyuntura. La demanda, el driver más relevante en la industria, claramente se ve desplazado efecto del impedimento de comercialización y la paralisis en el país bajo las medidas de cuarentena
+nacional. Un punto importante es que algunas compañías del sector podrán seguir con sus actividades producto de la inclusión de actividades de infraestructura como vital durante la crisis del COVID-19.
 
-Frente a la incertidumbre que generan estos escenarios y como la dinámica particular
-de cada compañía que aporta al crecimiento de la industria total evoluciona en el 
-tiempo se torna relevante construir análisis y modelos estadísticos robustos
-que respondan a las perturbaciones en el mercado y permitan obtener información
+Frente a la incertidumbre que generan estos escenarios y como la dinámica particular de cada compañía que aporta al crecimiento de la industria total evoluciona en el tiempo se torna relevante construir análisis y modelos estadísticos robustos que respondan a las perturbaciones en el mercado y permitan obtener información
 valiosa para la toma de decisiones.
 
 ## Consolidación de Información
@@ -69,7 +52,7 @@ data = all_data[,-c(1,2)]
 ```
 
 
-## Transformación  de Variables y Análisis Descriptivo
+## Transformación de Variables y Análisis Descriptivo
 
 
 Damos una visualizacion inicial al conjunto de datos con el que se va a trabajar:
@@ -133,17 +116,17 @@ bxplot_gastos_dif = boxplot(Gastos.de.ventas_dif~Year, data = all_data)
 ```{r}
 ### Outliers para costos dif
 kable(all_data[(all_data$Costo.de.ventas_dif %in% bxplot_costos_dif$out),]$NIT)
-kable(all_data[(all_data$Costo.de.ventas_dif %in% bxplot_costos_dif$out),]$Costo.de.ventas_dif)
+#kable(all_data[(all_data$Costo.de.ventas_dif %in% bxplot_costos_dif$out),]$Costo.de.ventas_dif)
 ```
 
 ```{r}
 ### Outliers para gastos dif
 kable(all_data[(all_data$Gastos.de.ventas_dif %in% bxplot_gastos_dif$out),]$NIT)
-kable(all_data[(all_data$Gastos.de.ventas_dif %in% bxplot_gastos_dif$out),]$Year)
-kable(all_data[(all_data$Gastos.de.ventas_dif %in% bxplot_gastos_dif$out),]$Gastos.de.ventas_dif)
+#kable(all_data[(all_data$Gastos.de.ventas_dif %in% bxplot_gastos_dif$out),]$Year)
+#kable(all_data[(all_data$Gastos.de.ventas_dif %in% bxplot_gastos_dif$out),]$Gastos.de.ventas_dif)
 ```
 
-#### Analisis:
+#### Análisis:
 
 
 Al observar la distribución del comportamiento de las variables de ventas y gastos para los 3 años en consideración, podemos ver que no hay mucha variación entre el comportamiento de estas a lo largo del tiempo, vemos que en particular, tanto el monto de costo y gasto promedio (mediana) es constante para los 3 años, aunque se nota un aumento en los costos en el año 2018 para el caso de algunas empresas. Ademas, vemos para que caso de los Costos, las mismas 2 empresas (relacionadas a los NITs 860009694 y 900378893) fueron las que presentaron un maypr valor de costos en los 3 periodos, por lo que el boxplot los considera registros outliers. Mirando la distribución de los gatos, notamos que una empresa tuvo los gastos mas altos en los 3 periodos (relacionadas al NIT 801002644) pero adicional, en el último año, la empresa con el NIT 800015615 tuvo un aumento en sus gastos, por lo que es considerado también como un outlier por el boxplot.
@@ -153,7 +136,7 @@ Pasando a la distribución de las variables de diferencia de costos y gastos, ve
 Ahora mirando la variable de diferencia de gastos, solamente 3 empresas tienen comportamientos grandes en estas diferencias, asi la empresa 806014553 es la que reporta un cambio grande (negativo) en sus gastos, lo que indica que los gastos de venta fueron mucho menores en el 2016 a comparación del 2015, mientras que las empresas con NIT 801002644, 890904459 reportan un aumento en esta diferencia. En particular vemos que aparece la empresa 801002644, la cual vimos que tuvo un aumento en sus costos durante los 3 periodos analizados, y ahora presenta un aumento de gatos. Para el año 2017, se tuvo un aumento en la cantidad de empresas que variaron considerablemente sus gastos de ventas, asi tenemos que las empresas con los NITs 800015615, 801002644, 805012368 fueron las que presentaron un incremento (Note nuevamente la empresa 801002644), mientras que 4 presentaron una disminución en sus gastos (empresas con los NITs 806014553, 830037495, 860050956, 890311366, 900378893). Por último, para el año 2018, tenemos 3 empresas con estos cambios atipicos en sus gastos de venta, tenemos asi que las empresas con NITs 800236890, 806014553 son las que presentaron un incremento en dicha variable, mientras que la empresa 890311366 fue la única que presentó una disminusión considerable en sus gastos. Adicional a esto, vemos que la empresa que tiempre aumentó sus costos además de sus gastos en los últimos años, para el 2018 tuvo un cambio "normal" en sus gastos en comparación a las demás empresas.
 
 
-
+Asi, estos cambios en las industrias en sus costos y gastos de ventas, pueden estar directamente relacionados con algunos eventos que hayan hecho la gran variación en la materia prima requerida para sus productos (tipos de mezlcas de cemento por ejemplo), además que el sector seleccionado depende bastante de los planes de infraestructura que se tengan, por lo que también es factible que en los periodos analizados, hayan ocurrido cambios en estos planes dentro de la contratación de cada empresa, y sean estas las causas que nos lleven a ver diferencias tan grandes de periodo a periodo (tanto positivas como negativas)
 
 #### Matriz de Covarianzas
 ```{r}
@@ -171,7 +154,7 @@ kable(round(cor_data,2))
 corrplot(cor_data, method="circle")
 ```
 
-Dado que en este trabajo se pretende realizar la modelación de las variables de costo y gasto de ventas, la matriz de correlación es un buen indicador para observar relaciones lineales existentes en las variables. En particular, vemos para el caso de la información de gastos, una "fuerte" correlación de las variables de costo, diferencia de costos y diferencia de ventas. Para este caso, es natural encontrar una correlacion positiva con dichas variables, pues es claro que costos y gastos están asociados entre sí. Igualmente, la variable de diferencia de gastos, fue calculada con la variable gastos, por lo tanto tiene sentido encontrar esta correlación. Por otro lado, tanto para la variable de ventas como gastos, no se ven correlaciones fuertes en relación a las variables macro-económicas, lo que nos indica que no existe una relación lineal entre esta variable y las demás. Por lo que una buena alternativa en este trabajo, será considerar transformaciones no lineales de las variables para encontrar una dependencia con la información de los costos de venta.
+Dado que en este trabajo se pretende realizar la modelación de las variables de costo y gasto de ventas (también considerando la variante en las diferencias de las variables por periodo), la matriz de correlación es un buen indicador para observar relaciones lineales existentes en las variables. En particular, vemos para el caso de la información de gastos, una "fuerte" correlación de las variables de costo, diferencia de costos y diferencia de ventas. Para este caso, es natural encontrar una correlacion positiva con dichas variables, pues es claro que costos y gastos están asociados entre sí. Igualmente, la variable de diferencia de gastos, fue calculada con la variable gastos, por lo tanto tiene sentido encontrar esta correlación. Por otro lado, tanto para la variable de ventas como gastos, no se ven correlaciones fuertes en relación a las variables macro-económicas, lo que nos indica que no existe una relación lineal entre esta variable y las demás. Por lo que una buena alternativa en este trabajo, será considerar transformaciones no lineales de las variables para encontrar una dependencia con la información de los costos de venta. Ahora, mirando las variables de diferencia de gastos y costos, vemos que existen dependencias lineales mayores con las variables macroeconómicas a diferencia de las variables originales, así vemos que la diferencia en costos tiene un grado de asociación con todas las variables macroeconomicas, mientras que los gastos presenta una relación lineal con el balance de cuenta corriente, por lo que se podría pensar que existen relaciones no lineales respecto a los otros indicadores económicos.
 
 ## Visualizacion de la distribucion de los datos
 
@@ -255,13 +238,14 @@ p2 = grafica(data, "Costo.de.ventas" , "Costo.de.ventas_dif")
 ```
 
 ```{r}
-p3 = grafica(data, "Costo.de.ventas" , "Gastos.de.ventas")
+p3 = grafica(data, "Gasto.de.ventas" , "Gasto.de.ventas_dif")
 ```
 
 ### Creacion de modelos
 
 ```{r}
 data_aux = select(all_data,select = -starts_with('NIT'))
+data_aux = select(data_aux,select = -starts_with('Year'))
 
 empresas_train = c(800015615, 800045720,
                    800081030, 800112440,
@@ -340,12 +324,12 @@ abline(a=0, b=1, lwd = 2, col = 'red')
 par(mfrow=c(3,2))
 mod_plot = plot(mod_lin, which = c(1:6))
 ```
-### REVISAR ESTE ANALISIS
-De los gráficos anteriores, en particular analizando el valor de la distancia de Cook para las observaciones, notamos que las observaciones 9, 31, 58 son candidatas a ser registros atípicos en el conjunto de datos, por lo que entrenaremos un nuevo modelo eliminando estos registros. Notar que el tercer registro coincide con la empresa de NIT 860009694 para elaño 2018, lo cual coincide con uno de los registros raros encontrados en la sección descriptiva utilizando el boxplot.
+
+De los gráficos anteriores, en particular analizando el valor de la distancia de Cook para las observaciones, notamos que las observaciones 9, 12, 31, 58 son candidatas a ser registros atípicos en el conjunto de datos, por lo que entrenaremos un nuevo modelo eliminando estos registros. Notar que dos de esos outliers corresponden a la empresa con NIT 801002644 para los periodos del 2016 y del 2017, información que se contrasta con los outliers obtenidos en el boxplot, lo cual están incluidos tanto mirando la variable de costos como de gastos. los dos outliers restantes, corresponden a las empresas con NITs 860009694, 860050956 en los años 2016 y 2017 respectivamente. En particular estos registros no son encontrados como outliers en el boxplot, pero analizando en el 2018, ambas empresas si son identificadas como outliers debido a una diferencia significativa en los costos y gastos de venta respectivamente.
 
 ```{r}
-### Vector para eliminar registros atipicos
-outliers = c(9, 31, 58)
+### Vector para eliminar registros atipicos según la información obtenida por la distancia de cook
+outliers = c(9, 12, 31, 58)
 data_train_z_noOut = data_train_z[-outliers,]
 ```
 
@@ -424,8 +408,22 @@ mod_lin_reg = glmnet(x = X, y = Y, lambda = modelo_regularizacion$lambda.min, al
 coef(mod_lin_reg)
 ```
 
+## Modelos Lineales Generalizados (GLM)
 
-### Modelo de Efectos Mixtos
+Dentro de los modelos que fueron expuestos a lo largo del curso, se encuentra la familia de los modelos lineales generalizados, los cual nos permiten la creación de modelos teniendo en cuenta diferentes supuestos que se hacen sobre la variable respuesta que estamos considerando. En la elaboración de este trabajo, se está considerando realiza un modelo de predicción sobre la diferencia de los costos de ventas que tienen las empresas, por lo que el dominio de la variable son los números reales (ya que puede tomar valores continuos tanto positivos como negativos). Justo por la caracteristica de la variable respuesta que tenemos, no se considera pertinente realizar evaluacion de los modelos, esta conclusión está apoyada del análisis que se realiza de los diferentes modelos generalizados que podriamos considerar:
+
+* Poisson: Para este modelo, esperamos que la variable respuesta tenga la forma de conteos, no negativa. Por lo que la diferencia de los costos de venta no aplica para este modelo.
+
+* Logit: Este es un modelo logistico, el cual asume que la variable respuesta tendrá un comportamiento dentro del intervalo (0,1) el cual se utiliza para la predicción de la ocurrencia de un evento (ocurre o no ocurre), por lo que tampoco se ajusta para el modelamiento de la diferencia de costos de venta
+
+* Gamma y Gaussiana inversa: De las distribuciones de probabilidad de la función gamma y gaussiana inversa, se sabe que los valores de la variable pueden ser continuos, por lo que nos llevaría a pensar de forma inicial que alguno de estos se puede considerar, pero en vista que tienen otra testricción, y es que los valores son continuos positivos, la variable de diferencia de costo de ventas tampoco se podría modelar con este tipo de modelos, ya que puede tomar valores negativos
+
+* Gaussiana: Por la caracteristica de la distribución, sabemos que es posible modelar variables respuesta que su dominio sea los números reales, por lo que la variable de diferencia de costos de venta encaja en este tipo de modelo, ahora bien, esto es equivalente a considerar el modelo lineal general presentado anteriormente.
+
+Por el análisis realizado, no se considera pertinente utilizar alguno de los otros modelos lineales generalizados para el modela miento de la variable diferencia de costos de venta
+
+
+## Modelo de Efectos Mixtos
 
 ```{r}
 
