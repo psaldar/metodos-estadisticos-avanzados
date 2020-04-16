@@ -453,15 +453,21 @@ abline(a=0, b=1, lwd = 2, col = 'red')
 
 ```{r}
 ## Generalized linear model Lasso
-#glm_obj <- glmmLasso(Costo.de.ventas~TRM+PIB+Balance_CC+Desempleo+Balance_Fiscal, rnd = list(NIT=~1+PIB), data = data_train_z, lambda=0.9, family = gaussian(link ="identity"))
-#summary(glm_obj)
+glm_obj <- glmmLasso(Costo.de.ventas_dif~TRM+PIB+Balance_CC+Desempleo+Balance_Fiscal, rnd = list(NIT=~1+PIB), data = data_train_z, lambda=10, family = gaussian(link ="identity"))
+summary(glm_obj)
 ```
 
 
 ```{r}
-#preds = predict(glm_obj, data = data_train_z)
-#plot(preds,data_train_z$Costo_de_ventas)
-#abline(a=0, b=1, lwd = 2, col = 'red')
+preds = predict(glm_obj, data = data_train_z)
+plot(preds,data_train_z$Costo.de.ventas_dif)
+abline(a=0, b=1, lwd = 2, col = 'red')
+```
+
+```{r}
+preds = predict(glm_obj, newdata = data_test_z)
+plot(preds,data_test_z$Costo.de.ventas_dif)
+abline(a=0, b=1, lwd = 2, col = 'red')
 ```
 
 
