@@ -238,7 +238,7 @@ p2 = grafica(data, "Costo.de.ventas" , "Costo.de.ventas_dif")
 ```
 
 ```{r}
-p3 = grafica(data, "Gasto.de.ventas" , "Gasto.de.ventas_dif")
+p3 = grafica(data, "Gastos.de.ventas" , "Gastos.de.ventas_dif")
 ```
 
 ### Creacion de modelos
@@ -438,7 +438,9 @@ Dentro de los modelos que fueron expuestos a lo largo del curso, se encuentra la
 Por el análisis realizado, no se considera pertinente utilizar alguno de los otros modelos lineales generalizados para el modela miento de la variable diferencia de costos de venta
 
 
-## Modelo de Efectos Mixtos
+### Modelo de Efectos Mixtos
+
+ 
 
 ```{r}
 
@@ -446,10 +448,14 @@ Por el análisis realizado, no se considera pertinente utilizar alguno de los ot
 mod_me = lmer('Costo.de.ventas_dif~PIB+(PIB|NIT)', data = data_train_z)
 ```
 
+ 
+
 ```{r}
 par(mfrow=c(3,2))
 plot(mod_me, which = c(1:6))
 ```
+
+ 
 
 ```{r}
 preds = predict(mod_me)
@@ -457,24 +463,23 @@ plot(preds,data_train_z$Costo.de.ventas_dif)
 abline(a=0, b=1, lwd = 2, col = 'red')
 ```
 
+ 
+
 ```{r}
 preds = predict(mod_me, newdata = data_test_z,allow.new.levels=TRUE)
 plot(preds,data_test_z$Costo.de.ventas_dif)
 abline(a=0, b=1, lwd = 2, col = 'red')
 ```
 
-Medida de r2 para este modelo es:
-```{r}
-r2_model<-r2_score(preds, data_test_z$CCosto.de.ventas_dif)
-```
-
+ 
 
 ```{r}
 ## Generalized linear model Lasso
-glm_obj <- glmmLasso(Costo.de.ventas_dif~TRM+PIB+Balance_CC+Desempleo+Balance_Fiscal, rnd = list(NIT=~1+PIB), data = data_train_z, lambda=10, family = gaussian(link ="identity"))
+glm_obj <- glmmLasso(Costo.de.ventas_dif~TRM+PIB+Desempleo+Inflacion+Tasa_Intervencion+Balance_CC+Balance_Fiscal, rnd = list(NIT=~1+PIB+Balance_CC), data = data_train_z, lambda=10, family = gaussian(link ="identity"))
 summary(glm_obj)
 ```
 
+ 
 
 ```{r}
 preds = predict(glm_obj, data = data_train_z)
@@ -482,16 +487,23 @@ plot(preds,data_train_z$Costo.de.ventas_dif)
 abline(a=0, b=1, lwd = 2, col = 'red')
 ```
 
+
+```{r}
+r2_model_train<-r2_score(preds, data_train_z$Costo.de.ventas_dif)
+mse_train = mean((data_train_z$Costo.de.ventas_dif - preds)^2)
+
+print(r2_model_train)
+print(mse_train)
+```
+
+
 ```{r}
 preds = predict(glm_obj, newdata = data_test_z)
 plot(preds,data_test_z$Costo.de.ventas_dif)
 abline(a=0, b=1, lwd = 2, col = 'red')
 ```
 
-Medida de r2 para este modelo es:
-```{r}
-r2_model<-r2_score(preds, data_test_z$CCosto.de.ventas_dif)
-```
+ 
 
 
 ```{r}
@@ -499,11 +511,171 @@ infl <- influence(mod_me, obs = TRUE)
 cooks.distance(infl)
 plot(infl, which = "cook")
 
+ 
+
 ```
+
+ 
+
+```{r}
+r2_model_test<-r2_score(preds, data_test_z$Costo.de.ventas_dif)
+mse_test = mean((data_test_z$Costo.de.ventas_dif - preds)^2)
+print(r2_model_test)
+print(mse_test)
+```
+
+ 
 
 
 ```{r}
-plot(all_data$Year, all_data$Costo.de.ventas, col=all_data$NIT, xlab = "Año", ylab = "Valor del Costo de Venta por Empresa")
+plot(all_data$Year, all_data$Costo.de.ventas, col=all_data$NIT, xlab = "AÃ±o", ylab = "Valor del Costo de Venta por Empresa")
+```
+
+ 
+
+ 
+
+ 
+
+ 
+
+```{r}
+## Generalized linear model Lasso quitando empresa outlier
+data_train_z_sinoutl = data_train_z[-c(12, 34, 56), ]
+glm_obj_s <- glmmLasso(Costo.de.ventas_dif~TRM+PIB+Balance_CC+Desempleo+Balance_Fiscal, rnd = list(NIT=~1+PIB), data = data_train_z_sinoutl, lambda=5, family = gaussian(link ="identity"))
+summary(glm_obj_s)
+```
+
+ 
+
+```{r}
+preds = predict(glm_obj_s, data = data_train_z_sinoutl)
+plot(preds,data_train_z_sinoutl$Costo.de.ventas_dif)
+abline(a=0, b=1, lwd = 2, col = 'red')
+```
+```{r}
+r2_model_train_sinoutl<-r2_score(preds, data_train_z_sinoutl$Costo.de.ventas_dif)
+mse_sinoutl = mean((data_train_z_sinoutl$Costo.de.ventas_dif - preds)^2)
+print(r2_model_train_sinoutl)
+print(mse_sinoutl)
+```
+
+ 
+
+```{r}
+preds = predict(glm_obj_s, newdata = data_test_z)
+plot(preds,data_test_z$Costo.de.ventas_dif)
+abline(a=0, b=1, lwd = 2, col = 'red')
+```
+```{r}
+r2_model_test_sinoutl<-r2_score(preds, data_test_z$Costo.de.ventas_dif)
+mse_sinoutl_test = mean((data_test_z$Costo.de.ventas_dif - preds)^2)
+
+print(r2_model_test_sinoutl)
+print(mse_sinoutl_test)
+```
+
+ 
+
+```{r}
+## Trasnformacion de variables (productos y divisiones)
+vars = c("TRM","PIB","Desempleo","Inflacion","Tasa_Intervencion","Balance_CC","Balance_Fiscal")
+df = data_train_z[vars]
+# x^2
+df_p <- df^2
+vector = c()
+for (i in colnames(df)) vector <- c(vector, paste(i,'_p_',i, sep  = ''))
+colnames(df_p) <-  vector
+# xi*xj
+df_s <- do.call(cbind,combn(colnames(df), 2,
+               FUN= function(x) list(df[x[1]]*df[x[2]])))
+colnames(df_s) <-  combn(colnames(df), 2,
+                 FUN = paste, collapse="_p_")
+# xi/xj
+df_t <- do.call(cbind,combn(colnames(df), 2,
+               FUN= function(x) list(df[x[1]]/df[x[2]])))
+colnames(df_t) <-  combn(colnames(df), 2,
+                 FUN = paste, collapse="_d_")
+df_trans=cbind(data_train_z,df_p,df_s,df_t)
+```
+
+ 
+
+
+```{r}
+## Generalized linear model Lasso con todas las transformaciones
+glm_obj <- glmmLasso(Costo.de.ventas_dif~TRM+PIB+Desempleo+Inflacion+Tasa_Intervencion+Balance_CC+Balance_Fiscal+TRM_p_TRM+PIB_p_PIB+Desempleo_p_Desempleo+Inflacion_p_Inflacion+Tasa_Intervencion_p_Tasa_Intervencion+Balance_CC_p_Balance_CC+Balance_Fiscal_p_Balance_Fiscal+TRM_p_PIB+TRM_p_Desempleo+TRM_p_Inflacion+TRM_p_Tasa_Intervencion+TRM_p_Balance_CC+TRM_p_Balance_Fiscal+PIB_p_Desempleo+PIB_p_Inflacion+PIB_p_Tasa_Intervencion+PIB_p_Balance_CC+PIB_p_Balance_Fiscal+Desempleo_p_Inflacion+Desempleo_p_Tasa_Intervencion+Desempleo_p_Balance_CC+Desempleo_p_Balance_Fiscal+Inflacion_p_Tasa_Intervencion+Inflacion_p_Balance_CC+Inflacion_p_Balance_Fiscal+Tasa_Intervencion_p_Balance_CC+Tasa_Intervencion_p_Balance_Fiscal+Balance_CC_p_Balance_Fiscal+TRM_d_PIB+TRM_d_Desempleo+TRM_d_Inflacion+TRM_d_Tasa_Intervencion+TRM_d_Balance_CC+TRM_d_Balance_Fiscal+PIB_d_Desempleo+PIB_d_Inflacion+PIB_d_Tasa_Intervencion+PIB_d_Balance_CC+PIB_d_Balance_Fiscal+Desempleo_d_Inflacion+Desempleo_d_Tasa_Intervencion+Desempleo_d_Balance_CC+Desempleo_d_Balance_Fiscal+Inflacion_d_Tasa_Intervencion+Inflacion_d_Balance_CC+Inflacion_d_Balance_Fiscal+Tasa_Intervencion_d_Balance_CC+Tasa_Intervencion_d_Balance_Fiscal+Balance_CC_d_Balance_Fiscal, rnd = list(NIT=~1+PIB+Balance_CC), data = df_trans, lambda=15, family = gaussian(link ="identity"))
+summary(glm_obj)
+### Para que converja, toca poner un lamba alto. Esto conlleva a que todas las betas sean 0
+### Un lambda menor lleva a que la matriz no sea invertible
+```
+
+ 
+
+### Lambda bajo
+```{r}
+## Generalized linear model Lasso con todas las transformaciones de Balance_CC
+glm_obj_tr <- glmmLasso(Costo.de.ventas_dif~Balance_CC+PIB+Balance_Fiscal, rnd = list(NIT=~1+PIB+Balance_CC), data = df_trans, lambda=1, family = gaussian(link ="identity"))
+summary(glm_obj_tr)
+
+```
+```{r}
+preds = predict(glm_obj_tr, data = data_train_z)
+plot(preds,data_train_z$Costo.de.ventas_dif)
+abline(a=0, b=1, lwd = 2, col = 'red')
+```
+```{r}
+r2_model_train_new<-r2_score(preds, data_train_z$Costo.de.ventas_dif)
+mse_new = mean((data_train_z$Costo.de.ventas_dif - preds)^2)
+
+print(r2_model_train_new)
+print(mse_new)
+```
+
+```{r}
+preds = predict(glm_obj_tr, newdata = data_test_z)
+plot(preds,data_test_z$Costo.de.ventas_dif)
+abline(a=0, b=1, lwd = 2, col = 'red')
+```
+```{r}
+r2_model_test_new<-r2_score(preds, data_test_z$Costo.de.ventas_dif)
+mse_new_test = mean((data_test_z$Costo.de.ventas_dif - preds)^2)
+
+print(r2_model_test_new)
+print(mse_new_test)
+```
+
+### Lambda alto
+```{r}
+## Generalized linear model Lasso con todas las transformaciones de Balance_CC
+glm_obj_tr <- glmmLasso(Costo.de.ventas_dif~Balance_CC+PIB+Balance_Fiscal, rnd = list(NIT=~1+PIB+Balance_CC), data = df_trans, lambda=12, family = gaussian(link ="identity"))
+summary(glm_obj_tr)
+
+```
+```{r}
+preds = predict(glm_obj_tr, data = data_train_z)
+plot(preds,data_train_z$Costo.de.ventas_dif)
+abline(a=0, b=1, lwd = 2, col = 'red')
+```
+```{r}
+r2_model_train_new<-r2_score(preds, data_train_z$Costo.de.ventas_dif)
+mse_new = mean((data_train_z$Costo.de.ventas_dif - preds)^2)
+
+print(r2_model_train_new)
+print(mse_new)
+``` 
+
+```{r}
+preds = predict(glm_obj_tr, newdata = data_test_z)
+plot(preds,data_test_z$Costo.de.ventas_dif)
+abline(a=0, b=1, lwd = 2, col = 'red')
+```
+```{r}
+r2_model_test_new<-r2_score(preds, data_test_z$Costo.de.ventas_dif)
+mse_new_test = mean((data_test_z$Costo.de.ventas_dif - preds)^2)
+
+print(r2_model_test_new)
+print(mse_new_test)
 ```
 
 
