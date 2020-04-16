@@ -306,6 +306,10 @@ data_test_z$NIT = NIT_test
 
 ```
 
+```{r}
+r2_score <- function (x, y) cor(x, y) ^ 2
+```
+
 ## Modelo para los Costos
 
 ### Modelo Lineal General
@@ -332,6 +336,11 @@ En el conjunto de Prueba
 preds_test = predict(mod_lin, newdata = data_test_z)
 plot(preds_test, data_test_z$Costo.de.ventas_dif, xlab = 'Valor predicho', ylab = 'Valor Real')
 abline(a=0, b=1, lwd = 2, col = 'red')
+```
+
+Medida de r2 para este modelo es:
+```{r}
+r2_model<-r2_score(preds_test, data_test_z$Costo.de.ventas_dif)
 ```
 
 ### Graficos de Evaluacion de modelos
@@ -389,6 +398,12 @@ preds_test = predict(mod_lin02, newdata = data_test_z)
 plot(preds_test, data_test_z$Costo.de.ventas_dif, xlab = 'Valor predicho', ylab = 'Valor Real')
 abline(a=0, b=1, lwd = 2, col = 'red')
 ```
+
+Medida de r2 para este modelo es:
+```{r}
+r2_model<-r2_score(preds_test, data_test_z$Costo.de.ventas_dif)
+```
+
 
 ### Graficos de Evaluacion de modelos entrenando sin Outliers
 
@@ -450,6 +465,11 @@ plot(preds,data_test_z$Costo.de.ventas_dif)
 abline(a=0, b=1, lwd = 2, col = 'red')
 ```
 
+Medida de r2 para este modelo es:
+```{r}
+r2_model<-r2_score(preds, data_test_z$CCosto.de.ventas_dif)
+```
+
 
 ```{r}
 ## Generalized linear model Lasso
@@ -468,6 +488,11 @@ abline(a=0, b=1, lwd = 2, col = 'red')
 preds = predict(glm_obj, newdata = data_test_z)
 plot(preds,data_test_z$Costo.de.ventas_dif)
 abline(a=0, b=1, lwd = 2, col = 'red')
+```
+
+Medida de r2 para este modelo es:
+```{r}
+r2_model<-r2_score(preds, data_test_z$CCosto.de.ventas_dif)
 ```
 
 
