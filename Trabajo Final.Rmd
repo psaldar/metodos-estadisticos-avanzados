@@ -58,7 +58,9 @@ data = all_data[,-c(1,2)]
 Damos una visualizacion inicial al conjunto de datos con el que se va a trabajar:
 
 ```{r}
-kable(head(round(data,2)))
+kable(head(round(data,2))) %>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "center")%>%
+  scroll_box("100%", height = "200px")
 ```
 
 En la siguiente tabla, vemos información descriptiva de las variables que se considerarán en la etapa de modelamiento del trabajo, vemos así que contamos con un total de 11 variables, cada una con magnitudes diferentes. Vemos que algunos indicadores tienen valores entre 0 y 1 tal como lo es el desempleo, mientras que otras variables representan dinero, tal como la trm, el monto de gastos y ventas. Así, tenemos una idea inicial de las características del conjunto de datos, por lo que se aplicarán lo métodos correspondientes cuando sea necesario, si lo que se realizará es sensible a la escala de los datos.
