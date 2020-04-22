@@ -83,12 +83,12 @@ dat_2017_auxi = dat_2017_f.sort_values(by='NIT').reset_index(drop=True)
 dat_2018_auxi = dat_2018_f.sort_values(by='NIT').reset_index(drop=True)
 
 ### Calular valores en diferencias de costo de ventas y gastos de ventas
-dat_2016_auxi['Costo de ventas_dif'] = dat_2016_auxi['Costo de ventas'] - dat_2015_auxi['Costo de ventas']
-dat_2017_auxi['Costo de ventas_dif'] = dat_2017_auxi['Costo de ventas'] - dat_2016_auxi['Costo de ventas']
-dat_2018_auxi['Costo de ventas_dif'] = dat_2018_auxi['Costo de ventas'] - dat_2017_auxi['Costo de ventas']
-dat_2016_auxi['Gastos de ventas_dif'] = dat_2016_auxi['Gastos de ventas'] - dat_2015_auxi['Gastos de ventas']
-dat_2017_auxi['Gastos de ventas_dif'] = dat_2017_auxi['Gastos de ventas'] - dat_2016_auxi['Gastos de ventas']
-dat_2018_auxi['Gastos de ventas_dif'] = dat_2018_auxi['Gastos de ventas'] - dat_2017_auxi['Gastos de ventas']
+dat_2016_auxi['Costo de ventas_dif'] = (dat_2016_auxi['Costo de ventas'] - dat_2015_auxi['Costo de ventas'])/dat_2015_auxi['Costo de ventas']
+dat_2017_auxi['Costo de ventas_dif'] = (dat_2017_auxi['Costo de ventas'] - dat_2016_auxi['Costo de ventas'])/dat_2016_auxi['Costo de ventas']
+dat_2018_auxi['Costo de ventas_dif'] = (dat_2018_auxi['Costo de ventas'] - dat_2017_auxi['Costo de ventas'])/dat_2017_auxi['Costo de ventas']
+dat_2016_auxi['Gastos de ventas_dif'] = (dat_2016_auxi['Gastos de ventas'] - dat_2015_auxi['Gastos de ventas'])/dat_2015_auxi['Gastos de ventas']
+dat_2017_auxi['Gastos de ventas_dif'] = (dat_2017_auxi['Gastos de ventas'] - dat_2016_auxi['Gastos de ventas'])/dat_2016_auxi['Gastos de ventas']
+dat_2018_auxi['Gastos de ventas_dif'] = (dat_2018_auxi['Gastos de ventas'] - dat_2017_auxi['Gastos de ventas'])/dat_2017_auxi['Gastos de ventas']
 
 
 ### Identificar empresas con un NaN en alguna de sus filas

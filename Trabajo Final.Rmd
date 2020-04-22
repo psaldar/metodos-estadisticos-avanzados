@@ -58,7 +58,9 @@ data = all_data[,-c(1,2)]
 Damos una visualizacion inicial al conjunto de datos con el que se va a trabajar:
 
 ```{r}
-kable(head(round(data,2)))
+kable(head(round(data,2))) %>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "center")%>%
+  scroll_box("100%", height = "200px")
 ```
 
 En la siguiente tabla, vemos información descriptiva de las variables que se considerarán en la etapa de modelamiento del trabajo, vemos así que contamos con un total de 11 variables, cada una con magnitudes diferentes. Vemos que algunos indicadores tienen valores entre 0 y 1 tal como lo es el desempleo, mientras que otras variables representan dinero, tal como la trm, el monto de gastos y ventas. Así, tenemos una idea inicial de las características del conjunto de datos, por lo que se aplicarán lo métodos correspondientes cuando sea necesario, si lo que se realizará es sensible a la escala de los datos.
@@ -230,15 +232,23 @@ grafica = function(data, name1, name2){
 ```
 
 ```{r}
-p1 = grafica(data, "TRM", "PIB")
+p1 = grafica(data, "Costo.de.ventas_dif", "PIB")
 ```
 
 ```{r}
-p2 = grafica(data, "Costo.de.ventas" , "Costo.de.ventas_dif")
+p2 = grafica(data, "Costo.de.ventas_dif", "TRM")
 ```
 
 ```{r}
-p3 = grafica(data, "Gastos.de.ventas" , "Gastos.de.ventas_dif")
+p3 = grafica(data, "Costo.de.ventas" , "Costo.de.ventas_dif")
+```
+
+```{r}
+p4 = grafica(data, "Gastos.de.ventas" , "Gastos.de.ventas_dif")
+```
+
+```{r}
+p4 = grafica(data, "Costo.de.ventas_dif" , "Gastos.de.ventas_dif")
 ```
 
 ### Creacion de modelos
@@ -252,12 +262,12 @@ empresas_train = c(800015615, 800045720,
                    800118660, 800157469,
                    800232356, 800236890,
                    801002644, 805012368,
-                   830030574, 860009694,
-                   860030360, 860050956,
-                   890117431, 890311366,
-                   890904459, 900173460,
-                   900184722, 900234565,
-                   900364670, 900389088)
+                   806014553, 830030574,
+                   830037495, 830052054,
+                   860009694, 860050956,
+                   890904459, 890909034,
+                   900173460, 900204182,
+                   900234565, 900378893)
 
 empresas_test = c(806014553, 830037495,
                    830052054, 860033653,
@@ -274,7 +284,7 @@ NIT_test = NIT[test,]
 
 data_train = data_aux[train,]
 rownames(data_train) <- NULL
-data_train_z = scale(data_train, center = TRUE, scale = TRUE)
+data_train_z = data_train#scale(data_train, center = TRUE, scale = TRUE)
 
 media_tr = attr(data_train_z, 'scaled:center')
 stdev_tr = attr(data_train_z, 'scaled:scale')
@@ -283,7 +293,7 @@ data_train_z = as.data.frame(data_train_z)
 
 data_test = data_aux[test,]
 rownames(data_test) <- NULL
-data_test_z = as.data.frame(scale(data_test,  center = media_tr, scale = stdev_tr))
+data_test_z = data_test#as.data.frame(scale(data_test,  center = media_tr, scale = stdev_tr))
 
 data_train_z$NIT = NIT_train
 data_test_z$NIT = NIT_test
@@ -318,11 +328,7 @@ abline(a=0, b=1, lwd = 2, col = 'red')
 
 Llevando los resultado previos a la escala original es claro como evaluación del modelo en el conjunto de entrenamiento se distribuye entre tres conjuntos de empresas, primero, aquellas con diferencia en sus costos de venta son ocupados en mayor proporción por valores negativos, otra srgunda donde permanecen en montos bajos y finalmente la tercera donde las diferencias en el costo son mayores que el resto. Si bien los resultados claramente no son satisfactorios nótese que el modelo no entrega valores absurdos, en tanto su valor máximo dado por \$2.699.228 se mantiene por debajo de \$36.609.681 que es el valor real, así mismo con su mínimo dado por -\$985489.8, el cual resulta por encima de su respectivo valor real de -\$17.903.909.
 
-```{r}
-plot(preds*stdev_tr['Costo.de.ventas_dif']+media_tr['Costo.de.ventas_dif'], 
-     data_train_z$Costo.de.ventas_dif*stdev_tr['Costo.de.ventas_dif']+media_tr['Costo.de.ventas_dif'], xlab = 'Valor predicho', ylab = 'Valor Real')
-abline(a=0, b=1, lwd = 2, col = 'red')
-```
+
 En el conjunto de Prueba
 ```{r}
 preds_test = predict(mod_lin, newdata = data_test_z)
@@ -331,12 +337,6 @@ abline(a=0, b=1, lwd = 2, col = 'red')
 ```
 
 La situación vista en el conjunto de entrenamiento no se replica en el de testeo como se puede apreciar en la imagen, donde los valores predichos se encuentran en cuadrantes números considerablemente apartados de los reales; no obstante, las cifras aún son razonables dentro de los parámetros.
-
-```{r}
-plot(preds_test*stdev_tr['Costo.de.ventas_dif']+media_tr['Costo.de.ventas_dif'], 
-     data_test_z$Costo.de.ventas_dif*stdev_tr['Costo.de.ventas_dif']+media_tr['Costo.de.ventas_dif'], xlab = 'Valor predicho', ylab = 'Valor Real')
-abline(a=0, b=1, lwd = 2, col = 'red')
-```
 
 
 Medidas de (r2, r2_adj) para este modelo es:
@@ -356,7 +356,7 @@ De los gráficos anteriores, en particular analizando el valor de la distancia d
 
 ```{r}
 ### Vector para eliminar registros atipicos según la información obtenida por la distancia de cook
-outliers = c(9, 12, 31, 58)
+outliers = c(8, 18, 52)
 data_train_z_noOut = data_train_z[-outliers,]
 ```
 
@@ -396,11 +396,6 @@ abline(a=0, b=1, lwd = 2, col = 'red')
 
 Retirando los outliers en el caso de entrenamiento afortunadamente la razonabilidad de los valores predichos se conserva, donde se puede observar que aunque se encuentran considerablemente desfasados de los reales se mantienen entre rangos aceptables.
 
-```{r}
-plot(preds*stdev_tr['Costo.de.ventas_dif']+media_tr['Costo.de.ventas_dif'], 
-     data_train_z_noOut$Costo.de.ventas_dif*stdev_tr['Costo.de.ventas_dif']+media_tr['Costo.de.ventas_dif'], xlab = 'Valor predicho', ylab = 'Valor Real')
-abline(a=0, b=1, lwd = 2, col = 'red')
-```
 
 En el conjunto de Prueba
 ```{r}
@@ -411,16 +406,13 @@ abline(a=0, b=1, lwd = 2, col = 'red')
 
 La tendencia a generar valores considerablemente menores a los reales por este modelo se replica con el conjunto de testeo, donde las diferencias de los costos de venta se alejan mucho más de los reales hasta a una escala de 10^5, lo que pone en duda la razonabilidad por este lado.
 
-```{r}
-plot(preds_test*stdev_tr['Costo.de.ventas_dif']+media_tr['Costo.de.ventas_dif'], 
-     data_test_z$Costo.de.ventas_dif*stdev_tr['Costo.de.ventas_dif']+media_tr['Costo.de.ventas_dif'], xlab = 'Valor predicho', ylab = 'Valor Real')
-abline(a=0, b=1, lwd = 2, col = 'red')
-```
 
 Medidas de (r2, r2_adj) para este modelo es:
 ```{r}
 r2_model<-r2_score(preds_test, data_test_z$Costo.de.ventas_dif)
 adj_r2_model<-adj_r2_score(preds_test, data_test_z$Costo.de.ventas_dif)
+print(r2_model)
+print(adj_r2_model)
 ```
 
 
@@ -442,19 +434,19 @@ f1 = formula('Costo.de.ventas_dif~-1+PIB+TRM+Desempleo+Inflacion+Tasa_Intervenci
 
 
 X = model.matrix(f1, data = as.data.frame(data_train_z))
-Y = data_train_z$Costo.de.ventas
+Y = data_train_z$Costo.de.ventas_dif
 
-lambda_grid = 10^seq(1,-2,length.out = 100)
+lambda_grid = 10^seq(10,-2,length.out = 100)
 modelo_regularizacion = cv.glmnet(x = X, y = Y, lambda = lambda_grid)
 ```
 
 ```{r}
-plot(modelo_regularizacion)
+plot(modelo_regularizacion) 
 ```
 
 Entrenamos el modelo agregando el parametro de regularizacion, y asi ver relevancia de variables
 ```{r}
-mod_lin_reg = glmnet(x = X, y = Y, lambda = modelo_regularizacion$lambda.min, alpha = 1, intercept = FALSE)
+mod_lin_reg = glmnet(x = X, y = Y, lambda = 0.05, alpha = 1, intercept = FALSE)
 coef(mod_lin_reg)
 ```
 
@@ -479,8 +471,8 @@ Por el análisis realizado, no se considera pertinente utilizar alguno de los ot
 
 ```{r}
 
-#mod_me = lmer('Costo.de.ventas_dif~Gastos_de_ventas+(Gastos_de_ventas|NIT)', data = data_train_z)
-mod_me = lmer('Costo.de.ventas_dif~PIB+(PIB|NIT)', data = data_train_z)
+mod_me = lmer('Costo.de.ventas_dif~Gastos.de.ventas+(Gastos.de.ventas|NIT)', data = data_train_z)
+#mod_me = lmer('Costo.de.ventas_dif~TRM+(TRM|NIT)', data = data_train_z)
 ```
 
  
@@ -514,16 +506,11 @@ abline(a=0, b=1, lwd = 2, col = 'red')
 
 Desafortunadamente en el caso de prueba no se logra distinguir la tendencia natural en el comportamiento de la diferencia de los costos de venta y la escala se encuentra muy distante entre los valores predichos y los reales, como se espera desde el gráfico anterior. En esta evaluación los valores predichos se ponderan para generar una tendencia casi constante y la razonabilidad una vez más se pone en duda, aunque no por completo, dado que éstos valores efectivamente pueden ser alcanzados con condiciones ligeramente diferentes.
 
-```{r}
-plot(preds*stdev_tr['Costo.de.ventas_dif']+media_tr['Costo.de.ventas_dif'], 
-     data_test_z$Costo.de.ventas_dif*stdev_tr['Costo.de.ventas_dif']+media_tr['Costo.de.ventas_dif'])
-abline(a=0, b=1, lwd = 2, col = 'red')
-```
  
 
 ```{r}
 ## Generalized linear model Lasso
-glm_obj <- glmmLasso(Costo.de.ventas_dif~TRM+PIB+Desempleo+Inflacion+Tasa_Intervencion+Balance_CC+Balance_Fiscal, rnd = list(NIT=~1+PIB+Balance_CC), data = data_train_z, lambda=10, family = gaussian(link ="identity"))
+glm_obj <- glmmLasso(Costo.de.ventas_dif~TRM+PIB+Desempleo+Inflacion+Tasa_Intervencion+Balance_CC+Balance_Fiscal, rnd = list(NIT=~1+PIB+Balance_CC), data = data_train_z, lambda=2.3, family = gaussian(link ="identity"))
 summary(glm_obj)
 ```
 
@@ -537,11 +524,7 @@ abline(a=0, b=1, lwd = 2, col = 'red')
 
 Bajo esta aplicación del modelo Lasso es claro como ya se presenta una mejor distribución de los valores predichos contra los reales y éste es un comportamiento más natural y razonable en la industria, donde si bien hay un par que se alejan del común respecto a las diferencias en los costos de venta, el resto dentro de sus segmentos también puede tener distribuciones similares teniendo en cuenta sus montos.
 
-```{r}
-plot(preds*stdev_tr['Costo.de.ventas_dif']+media_tr['Costo.de.ventas_dif'], 
-     data_train_z$Costo.de.ventas_dif*stdev_tr['Costo.de.ventas_dif']+media_tr['Costo.de.ventas_dif'])
-abline(a=0, b=1, lwd = 2, col = 'red')
-```
+
 
 ```{r}
 r2_model_train<-r2_score(preds, data_train_z$Costo.de.ventas_dif)
@@ -562,11 +545,7 @@ abline(a=0, b=1, lwd = 2, col = 'red')
 
 Como se presenta a continuación en esta oportunidad se captura algo de la relación positiva entre los valores predichos y los reales. Exceptuando los valores atipicos la razonabilidad se pone en duda debido al sentido de los signos y la propensión de éstos modelos a entregar resultados en escalas menores a las esperadas.
 
-```{r}
-plot(preds*stdev_tr['Costo.de.ventas_dif']+media_tr['Costo.de.ventas_dif'], 
-     data_test_z$Costo.de.ventas_dif*stdev_tr['Costo.de.ventas_dif']+media_tr['Costo.de.ventas_dif'])
-abline(a=0, b=1, lwd = 2, col = 'red')
-``` 
+
 
 
 ```{r}
