@@ -59,7 +59,7 @@ NIT = all_data['NIT']
 data = all_data[,-c(1,2)]
 ```
 
-## Transformación de variables y análisis descriptivo
+## Análisis descriptivo
 Damos una visualizacion inicial al conjunto de datos con el que se va a trabajar:
 
 ```{r}
