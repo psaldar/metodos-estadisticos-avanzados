@@ -184,6 +184,14 @@ kable(nits_tab)%>%
 
 ### Análisis:
 
+Al observar la distribución del comportamiento de las variables de ventas y gastos para los 3 años en consideración, podemos ver que no hay mucha variación entre el comportamiento de estas a lo largo del tiempo, vemos que en particular, tanto el monto de costo y gasto promedio (mediana) es constante para los 3 años, aunque se nota un aumento en los costos en el año 2018 para el caso de algunas empresas. Ademas, vemos para que caso de los Costos, las mismas 2 empresas (relacionadas a los NITs 860009694 y 900378893) fueron las que presentaron un maypr valor de costos en los 3 periodos, por lo que el boxplot los considera registros outliers. Mirando la distribución de los gatos, notamos que una empresa tuvo los gastos mas altos en los 3 periodos (relacionadas al NIT 801002644) pero adicional, en el último año, la empresa con el NIT 800015615 tuvo un aumento en sus gastos, por lo que es considerado también como un outlier por el boxplot.
+
+Pasando a la distribución de las variables de diferencia relativa de costos y gastos, vemos para ambos casos los registros outliers son aquellos que tienen un valor negativo en su diferencia o un incremento porcentual muy alto. Podemos ver que para el caso del 2016 en la variable costos, las empresas outliers fueron las correspondiente a los NITs 800236890, 890909034,	900437650, de estas, la única que no presenta una diferencia negativa fue la primera (800236890), por lo que puede indicar un aumento considerable (raro) en el mercado en término de los costos de venta (practicamente el doble del año anterior), mientras que todas las otras empresas presentaron una disminución considerable en este mismo concepto. Para el caso del 2017, tres empresas fueron consideradas como outlier, entre ellas, dos que se consideraron en el periodo anterior (800236890, 890909034), las cuales ambas reportaron una reducción de aproximadamente 65% en sus costos respecto al año anterior, mientras que la otra empresa considerada como ergistro raro (900389088) tuvo un aumento en sus costos de un 88% (casi el doble de los costos del año anterior). Para el último periodo, solo se encuentra una de las empresas mencionadas en los dos periodos anteriores (800236890), la cual vuelve a reportar una disminución considerable en sus costos.
+
+Ahora mirando la variable de diferencia de gastos, solamente 2 empresas tienen comportamientos alto, presentando un aumento de casi el doble de los gastos anuales, estas empresas corresponden a 800081030 y 890904459 para los años 2016 y 2017 respectivamente, en cambio para el 2018, se tuvo variabilidad en los gastos de ventas de 8 empresas que son considerados anormales tanto por sus aumentos como disminuciones, auqellas empresas son 900389088,	800045720,	800236890,	890311366,	890909034,	900234565,	900364670 y	900378893. En aquellas empresas que tuvieron aumentos considerables, reportan casi hasta un cuarto del aumento de gastos en comparación al año anterior, mientras que aquellas que reportan una disminución, vemos que sus gastos se disminuyeron hasta el doble del periodo pasado. 
+
+Asi, estos cambios en las industrias en sus costos y gastos de ventas, pueden estar directamente relacionados con algunos eventos que hayan hecho la gran variación en la materia prima requerida para sus productos (tipos de mezlcas de cemento por ejemplo), además que el sector seleccionado depende bastante de los planes de infraestructura que se tengan, por lo que también es factible que en los periodos analizados, hayan ocurrido cambios en estos planes dentro de la contratación de cada empresa, y sean estas las causas que nos lleven a ver diferencias tan grandes de periodo a periodo (tanto positivas como negativas)
+
 #### Matriz de Covarianzas
 ```{r}
 cov_data = cov(data)
@@ -432,11 +440,13 @@ par(mfrow=c(3,2))
 mod_plot = plot(mod_lin, which = c(1:6))
 ```
 
-De los gráficos anteriores, en particular analizando el valor de la distancia de Cook para las observaciones, notamos que las observaciones 9, 12, 31, 58 son candidatas a ser registros atípicos en el conjunto de datos, por lo que entrenaremos un nuevo modelo eliminando estos registros. Notar que dos de esos outliers corresponden a la empresa con NIT 801002644 para los periodos del 2016 y del 2017, información que se contrasta con los outliers obtenidos en el boxplot, lo cual están incluidos tanto mirando la variable de costos como de gastos. los dos outliers restantes, corresponden a las empresas con NITs 860009694, 860050956 en los años 2016 y 2017 respectivamente. En particular estos registros no son encontrados como outliers en el boxplot, pero analizando en el 2018, ambas empresas si son identificadas como outliers debido a una diferencia significativa en los costos y gastos de venta respectivamente.
+, 
+
+De los gráficos anteriores, en particular analizando el valor de la distancia de Cook para las observaciones, notamos que las observaciones 17, 30, 52 son candidatas a ser registros atípicos en el conjunto de datos, por lo que entrenaremos un nuevo modelo eliminando estos registros. Notar que los outliers corresponden a la empresa con NIT 890909034 para el 2016, y para la empresa 800236890 en los periodos del 2017 y 2018, información que se contrasta con los outliers obtenidos en el boxplot, lo cual están incluidos tanto mirando la variable de diferencia costos de venta.En vista de su comportamiento raro en magnitud según el boxplot, no es de extrañarse que estos registros hayan sido aquellos con la distancia de cook mas grande. Procederemos a entrenar un modelo removiendo estos registros
 
 ```{r}
 ### Vector para eliminar registros atipicos según la información obtenida por la distancia de cook
-outliers = c(8, 18, 52)
+outliers = c(17, 30, 52)
 data_train_z_noOut = data_train_z[-outliers,]
 ```
 
@@ -493,6 +503,8 @@ par(mfrow=c(3,2))
 mod_plot = plot(mod_lin02, which = c(1:6))
 ```
 
+Al observar el desempeño del modelo sin considerar dichos registros raros, no se tiene una mejora significativa en el modelo.
+
 ### Modelo Lineal con Regularizacion
 
 Vamos a encontrar el parametro de regulairzacion
@@ -521,7 +533,7 @@ coef(mod_lin_reg)
 
 ## Modelos Lineales Generalizados (GLM)
 
-Dentro de los modelos que fueron expuestos a lo largo del curso, se encuentra la familia de los modelos lineales generalizados, los cual nos permiten la creación de modelos teniendo en cuenta diferentes supuestos que se hacen sobre la variable respuesta que estamos considerando. En la elaboración de este trabajo, se está considerando realiza un modelo de predicción sobre la diferencia de los costos de ventas que tienen las empresas, por lo que el dominio de la variable son los números reales (ya que puede tomar valores continuos tanto positivos como negativos). Justo por la caracteristica de la variable respuesta que tenemos, no se considera pertinente realizar evaluacion de los modelos, esta conclusión está apoyada del análisis que se realiza de los diferentes modelos generalizados que podriamos considerar:
+Dentro de los modelos que fueron expuestos a lo largo del curso, se encuentra la familia de los modelos lineales generalizados, los cual nos permiten la creación de modelos teniendo en cuenta diferentes supuestos que se hacen sobre la variable respuesta que estamos considerando. En la elaboración de este trabajo, se está considerando realiza un modelo de predicción sobre transformaciones en la diferencia relativa de los costos de ventas que tienen las empresas, por lo que el dominio de la variable son los números reales (ya que puede tomar valores continuos tanto positivos como negativos, los cuales son considerados en las diferentes transformaciones que se plantean). Justo por la caracteristica de la variable respuesta que tenemos, no se considera pertinente realizar evaluacion de los modelos, esta conclusión está apoyada del análisis que se realiza de los diferentes modelos generalizados que podriamos considerar:
 
 * Poisson: Para este modelo, esperamos que la variable respuesta tenga la forma de conteos, no negativa. Por lo que la diferencia de los costos de venta no aplica para este modelo.
 
@@ -531,7 +543,7 @@ Dentro de los modelos que fueron expuestos a lo largo del curso, se encuentra la
 
 * Gaussiana: Por la caracteristica de la distribución, sabemos que es posible modelar variables respuesta que su dominio sea los números reales, por lo que la variable de diferencia de costos de venta encaja en este tipo de modelo, ahora bien, esto es equivalente a considerar el modelo lineal general presentado anteriormente.
 
-Por el análisis realizado, no se considera pertinente utilizar alguno de los otros modelos lineales generalizados para el modela miento de la variable diferencia de costos de venta
+Por el análisis realizado, no se considera pertinente utilizar alguno de los otros modelos lineales generalizados para el modela miento de la variable transformada de diferencia relativa de costos de venta
 
 
 ### Modelo de Efectos Mixtos
