@@ -240,7 +240,7 @@ p2 = grafica(data, "Costo.de.ventas_dif", "TRM")
 ```
 
 ```{r}
-p3 = grafica(data, "Costo.de.ventas" , "Costo.de.ventas_dif")
+p3 = grafica(data_aux, "Costo.de.ventas" , "Costo.de.ventas_dif")
 ```
 
 ```{r}
@@ -256,6 +256,32 @@ p4 = grafica(data, "Costo.de.ventas_dif" , "Gastos.de.ventas_dif")
 ```{r}
 data_aux = select(all_data,select = -starts_with('NIT'))
 data_aux = select(data_aux,select = -starts_with('Year'))
+
+### Transformacion de las variables respuesta
+
+### Recordar para la interpretacion de los modelos:
+### regresion log(y) = b*log(x) -> cambio en x, es un aumento en b% en y
+### regresion log(y) = b*x -> cambio en x implica un aumento en 100*b puntos en y
+### regresion y = b*log(x) -> cambio en x implica un cambio de (b/100)% en y
+### regresion y = b*x -> cambio en x implica un aumento de b en y
+
+### Transformacion 1: a nivel logaritmico
+data_aux$Costo.de.ventas_dif = log(1 + all_data$Costo.de.ventas_dif)
+
+### Transformacion 2: log(costos sobre gastos)
+#data_aux$Costo.de.ventas_dif = log(all_data$Costo.de.ventas/all_data$Gastos.de.ventas)
+
+### Transformacion 3: differencia porcentual de costos
+#data_aux$Costo.de.ventas_dif = all_data$Costo.de.ventas_dif
+
+### Transformacion boxcox: Realiza una transformacion para obtener un comportamiento
+### de la distribucion normal de la variable
+
+#bx = boxcox(all_data$Costo.de.ventas,objective.name = "Log-Likelihood", optimize = TRUE)
+#lambda = bx$lambda
+#data_aux$Costo.de.ventas_dif = (data_aux$Costo.de.ventas^lambda - 1)/lambda
+
+### Particionamiento del conjunto de datos
 
 empresas_train = c(800015615, 800045720,
                    800081030, 800112440,
