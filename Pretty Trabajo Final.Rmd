@@ -1,0 +1,745 @@
+---
+title: <center>Trabajo Final <br> <font size="5">Métodos Estadísticos Avanzados en Ciencia de los Datos</font></center>
+author: <center>Pablo Saldarriaga-Aristizabal, Nicolás Prieto-Escobar, Obed Rios-Ruiz</center>
+date: <center>Semestre 2020-1</center>
+output: html_document
+---
+
+<style>
+body {
+text-align: justify}
+</style>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readxl)
+library(ggplot2)
+library(kableExtra)
+library(matrixStats)
+library(Hmisc)
+library(pastecs)
+library(corrplot)
+library(mvtnorm)
+library(ggplot2)
+library(gridExtra)
+library(kableExtra)
+library(dplyr)
+library(lme4)
+library(car)
+library(glmmLasso)
+library(influence.ME)
+```
+
+
+## Introduccion
+
+El modelamiento del comportamiento de diferentes variables es un tema que ha sido estudiado en sectores energéticos, industriales, económicos y financieros. De allí se comienza a apreciar tanto la importancia que tienen los datos hoy en día al igual que las técnicas utilizadas para su modelamiento. La estadística es una disciplina que se preocupa por la recolección, organización, interpretación y análisis de datos, que, según su aplicación puede traer un gran impacto en la industria al momento de la toma de decisiones. En particular, diferentes técnicas estadísticas han sido utilizadas en el sector financiero, las cuales permiten modelar comportamiento de los clientes, acciones, entre otras variables.
+
+Diferentes industrias dentro de su funcionamiento, deben presentar ante la superintendencia información relacionando los gastos y ventas que presentaron anualmente. Además, se presume que del mercado colombiano, como en los procesos de las industria está esa interacción con todo el mercado, es posible pensar que exista una relación entre las diferentes variables macroeconomicas (ej. PIB, TRM, Balance Fiscal, Indice de Desempleo, etc.) y estos montos de costos y gastos de las empresas. Debido a la cantidad de información con la que se cuenta (información de costos y gastos para diferentes empresas en colombia entre los años 2016 y 2018), se sabe que no se cuenta con información suficiente para la construcción de un modelo por empresa que permita ver la relación existente entre las variables macroeconómicas y las variables asociadas a costos y gastos de ventas. Por lo anterior, es posible considerar un conjunto de datos como la consolidación de la información de todas las empresas junto con la información macroeconomica para los años en estudio, así buscando construir un modelo general para realizar la modelación de estas variables reportadas ante la superintendencia para un conjunto de empresas cuya industria sea similar.
+
+Por lo tanto, para el conjunto de datos meniconado anteriormente, se buscará modelar la información de costos y gastos de venta a partir de las variables macroeconomicas disponibles, al igual que analizar si al realizar alguna transformación a dichas variables resulta relevante al momento de la creación del modelo. Se utilizarán modelos lineales, comenzando con la evaluación del modelo lineal general, hasta la aplicación de modelos de efectos mixtos. Esta última estructura de modelos, es bastante usado al momento de tener individuos que comparten la misma información pero tienen una salida diferente (en nuestro caso, todas las empresas comparten la misma información de las variables macroeconómicas), por lo que utilizar este tipo de modelos resulta de gran interés ya que permite modelar tanto efectos a nivel de individuo como agregando un efecto aleatorio.
+
+## Clasificación Industrial Seleccionada
+
+El sector de la construcción es uno de los más relevantes en la economía colombiana. En nuestro contexto nacional el sector es considerado como uno de los más vitales para el desarrollo del país y representa uno de los más importantes rubros en materia de produccción interna componiendo cada año de 6 a 7 por ciento del producto interno bruto total y hasta un 7.1% del total de ocupados a nivel nacional. Dicho sector es caracterizado por sus fluctuaciones estacionarias fuertemente influenciadas por los planes de infraestructura de gran escala y los planes de gobierno. Respecto al último trimestre de 2019 tuvo un aumento de 3.4%, uno de los más altos a nivel de america latina.
+
+Si bien las estimaciones globales para el año 2020 en Colombia para esta industria eran positivas, la coyuntura del COVID-19 ha de perturbar fuertemente el sector,  afectando con alto impacto a los importadores de materiales y a la demanada frente a los retrasos en la ejecución de obras. Desde enero el sector de la producción de concreto
+ya estaba presentando caídas significativas de hasta un 8.3% respecto al año pasado en el mismo mes, por lo que se esperan peores resultados al cierre del segundo trimestre del año presente. Muchas compañías planearon incrementos en sus precios, con la esperanza de generar mayores ingresos, pero dichos planes han de ser postergados bajo la actual coyuntura. La demanda, el driver más relevante en la industria, claramente se ve desplazado efecto del impedimento de comercialización y la paralisis en el país bajo las medidas de cuarentena
+nacional. Un punto importante es que algunas compañías del sector podrán seguir con sus actividades producto de la inclusión de actividades de infraestructura como vital durante la crisis del COVID-19.
+
+Frente a la incertidumbre que generan estos escenarios y como la dinámica particular de cada compañía que aporta al crecimiento de la industria total evoluciona en el tiempo se torna relevante construir análisis y modelos estadísticos robustos que respondan a las perturbaciones en el mercado y permitan obtener información
+valiosa para la toma de decisiones.
+
+## Consolidación de información
+
+```{r}
+all_data = read.csv("Datos_completos.csv", encoding="UTF-8")
+NIT = all_data['NIT'] 
+data = all_data[,-c(1,2)]
+```
+
+## Transformación de variables y análisis descriptivo
+Damos una visualizacion inicial al conjunto de datos con el que se va a trabajar:
+
+```{r}
+kable(head(round(data,2))) %>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
+  scroll_box("100%", height = "300px")
+```
+
+En la siguiente tabla, vemos información descriptiva de las variables que se considerarán en la etapa de modelamiento del trabajo, vemos así que contamos con un total de 11 variables, cada una con magnitudes diferentes. Vemos que algunos indicadores tienen valores entre 0 y 1 tal como lo es el desempleo, mientras que otras variables representan dinero, tal como la trm, el monto de gastos y ventas. Así, tenemos una idea inicial de las características del conjunto de datos, por lo que se aplicarán lo métodos correspondientes cuando sea necesario, si lo que se realizará es sensible a la escala de los datos.
+
+```{r}
+summary_df = stat.desc(data)
+kable(summary_df) %>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
+  scroll_box("100%", height = "300px")
+
+```
+
+Además de la información descriptiva presentados en la tabla anterior, podemos ver para cada una de las variables, su distribución de forma visual con la ayuda de la creación de histogramas de frecuencia.
+
+```{r fig.align='center', echo = FALSE}
+plot1 = ggplot(data, aes(x=Costo.de.ventas)) + 
+ geom_histogram(aes(y=..density..), colour="black", fill="white", bins =30)+
+ geom_density(alpha=.2, fill="#FF6666")
+
+plot2 = ggplot(data, aes(x=Gastos.de.ventas)) + 
+ geom_histogram(aes(y=..density..), colour="black", fill="white", bins =30)+
+ geom_density(alpha=.2, fill="#FF6666")
+
+plot3 = ggplot(data, aes(x=Costo.de.ventas_dif)) + 
+ geom_histogram(aes(y=..density..), colour="black", fill="white", bins =30)+
+ geom_density(alpha=.2, fill="#FF6666") 
+
+plot4 = ggplot(data, aes(x=Gastos.de.ventas_dif)) + 
+ geom_histogram(aes(y=..density..), colour="black", fill="white", bins =30)+
+ geom_density(alpha=.2, fill="#FF6666") 
+
+grid.arrange(plot1, plot2, plot3, plot4, ncol=2, nrow=2)
+```
+
+Vamos a obtener la informacion relacionada a las medidas de centralidad y dispersion del conjunto de datos. Inicialmente, presentamos información del vector de medias y medianas que describen la centralidad del conjunto de datos. Posteriormente, consideramos las matrices de Covarianza y Correlación para tener una intuición de la variabilidad de la información que consideramos.
+
+### Vector de Medias y Medianas
+
+```{r, echo = FALSE}
+mean_data = colMeans(data)
+median_data = colMedians(as.matrix(data))
+names(mean_data) = names(data)
+names(median_data) = names(data)
+
+kable(
+  list(
+    mean_data,
+    median_data
+  ),
+  caption = 'Media y Mediana',
+  booktabs = TRUE, valign = 't'
+) %>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)
+```
+### Análisis desde variables absolutas
+#### Boxplot
+
+```{r fig.align='center'}
+par(mfrow=c(1,2))
+bxplot_costos = boxplot(Costo.de.ventas~Year, data = all_data)
+bxplot_gastos = boxplot(Gastos.de.ventas~Year, data = all_data)
+```
+
+```{r}
+### Outliers para costos
+nits_tab = t(all_data[(all_data$Costo.de.ventas %in% bxplot_costos$out),]$NIT)
+rownames(nits_tab) <- c("NITs")
+
+kable(nits_tab)%>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
+  column_spec(1,bold=T)
+```
+
+```{r}
+### Outliers para gastos
+nits_tab = t(all_data[(all_data$Gastos.de.ventas %in% bxplot_gastos$out),]$NIT)
+rownames(nits_tab) <- c("NITs")
+
+kable(nits_tab)%>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
+  column_spec(1,bold=T)
+
+```
+
+### Análisis desde variables diferenciales
+#### Boxplot
+
+```{r fig.align='center'}
+par(mfrow=c(1,2))
+bxplot_costos_dif = boxplot(Costo.de.ventas_dif~Year, data = all_data)
+bxplot_gastos_dif = boxplot(Gastos.de.ventas_dif~Year, data = all_data)
+```
+
+```{r}
+### Outliers para costos dif
+
+nits_tab = t(all_data[(all_data$Costo.de.ventas_dif %in% bxplot_costos_dif$out),]$NIT)
+rownames(nits_tab) <- c("NITs")
+
+kable(nits_tab)%>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
+  column_spec(1,bold=T)
+```
+
+```{r}
+### Outliers para gastos dif
+
+nits_tab = t(all_data[(all_data$Gastos.de.ventas_dif %in% bxplot_gastos_dif$out),]$NIT)
+rownames(nits_tab) <- c("NITs")
+
+kable(nits_tab)%>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
+  column_spec(1,bold=T)
+
+```
+
+### Análisis:
+
+#### Matriz de Covarianzas
+```{r}
+cov_data = cov(data)
+kable(formatC(cov_data,format = "e", digits = 2)) %>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
+  scroll_box("100%", height = "480px")
+```
+
+#### Matriz de Correlación
+```{r}
+cor_data = cor(data)
+kable(round(cor_data,2)) %>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
+  scroll_box("100%", height = "480px")
+
+```
+
+```{r fig.align='center'}
+corrplot(cor_data, method="circle")
+```
+
+Dado que en este trabajo se pretende realizar la modelación de las variables de costo y gasto de ventas (también considerando la variante en las diferencias de las variables por periodo), la matriz de correlación es un buen indicador para observar relaciones lineales existentes en las variables. En particular, vemos para el caso de la información de gastos, una "fuerte" correlación de las variables de costo, diferencia de costos y diferencia de ventas. Para este caso, es natural encontrar una correlacion positiva con dichas variables, pues es claro que costos y gastos están asociados entre sí. Igualmente, la variable de diferencia de gastos, fue calculada con la variable gastos, por lo tanto tiene sentido encontrar esta correlación. Por otro lado, tanto para la variable de ventas como gastos, no se ven correlaciones fuertes en relación a las variables macro-económicas, lo que nos indica que no existe una relación lineal entre esta variable y las demás. Por lo que una buena alternativa en este trabajo, será considerar transformaciones no lineales de las variables para encontrar una dependencia con la información de los costos de venta. Ahora, mirando las variables de diferencia de gastos y costos, vemos que existen dependencias lineales mayores con las variables macroeconómicas a diferencia de las variables originales, así vemos que la diferencia en costos tiene un grado de asociación con todas las variables macroeconomicas, mientras que los gastos presenta una relación lineal con el balance de cuenta corriente, por lo que se podría pensar que existen relaciones no lineales respecto a los otros indicadores económicos.
+
+## Visualizacion de la distribucion de los datos
+
+```{r, echo = FALSE}
+panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...)
+{
+    usr <- par("usr"); on.exit(par(usr))
+    par(usr = c(0, 1, 0, 1))
+    r <- abs(cor(x, y))
+    txt <- format(c(r, 0.123456789), digits = digits)[1]
+    txt <- paste0(prefix, txt)
+    if(missing(cex.cor)) cex.cor <- 0.8/strwidth(txt)
+    text(0.5, 0.5, txt, cex = cex.cor * r)
+}
+
+panel.hist <- function(x, ...)
+{
+    usr <- par("usr"); on.exit(par(usr))
+    par(usr = c(usr[1:2], 0, 1.5) )
+    h <- hist(x, plot = FALSE)
+    breaks <- h$breaks; nB <- length(breaks)
+    y <- h$counts; y <- y/max(y)
+    rect(breaks[-nB], 0, breaks[-1], y, col = "black", ...)
+}
+```
+
+```{r fig.align='center'}
+pairs(data,diag.panel = panel.hist, lower.panel = panel.cor)
+```
+
+### Visualizacion de los datos segun curvas de normalidad
+
+```{r}
+### Funcion para encontrar los contornos
+c_alpha = function(alpha, sigma, p){
+  res = (2*pi)^(-p/2)*(det(sigma))^(-1/2)*exp(-1/2*qchisq(1-alpha, df = p))
+  
+  return(res)
+}
+
+grafica = function(data, name1, name2){
+
+  data_aux = data[c(name1,name2)]
+  names(data_aux) = c("y1","y2")
+  
+  cov_data = cov(data_aux)
+  mean_data = mean=colMeans(data_aux)
+  
+  min_value1 = min(data[name1])
+  max_value1 = max(data[name1])
+  
+  min_value2 = min(data[name2])
+  max_value2 = max(data[name2])
+  
+  n = 100
+  
+  y1 = seq(min_value1, max_value1, length.out = n)
+  y2 = seq(min_value2, max_value2, length.out = n)
+  
+  grid = expand.grid(y1,y2)
+  grid$Z<-apply(grid,1,dmvnorm,mean = mean_data,sigma=cov_data)
+  Z<-matrix(grid$Z,nrow=n,ncol=n)
+  
+  contornos = sapply(c(0.01, 0.05, 0.1), c_alpha, sigma = cov_data, 2)
+  
+  contour(y1,y2,Z,levels=contornos,labels=c("99%","95%","90%"),
+          las=1)
+  points(data_aux$y1,data_aux$y2)
+  grid()  
+  title(main = "Contornos de distribucion normal", xlab = name1, ylab = name2)
+}
+```
+
+```{r fig.align='center'}
+p1 = grafica(data, "Costo.de.ventas_dif", "PIB")
+```
+
+```{r fig.align='center'}
+p2 = grafica(data, "Costo.de.ventas_dif", "TRM")
+```
+
+```{r fig.align='center'}
+p3 = grafica(data, "Costo.de.ventas" , "Costo.de.ventas_dif")
+```
+
+```{r fig.align='center'}
+p4 = grafica(data, "Gastos.de.ventas" , "Gastos.de.ventas_dif")
+```
+
+```{r fig.align='center'}
+p4 = grafica(data, "Costo.de.ventas_dif" , "Gastos.de.ventas_dif")
+```
+
+## Creacion de modelos
+
+```{r}
+data_aux = select(all_data,select = -starts_with('NIT'))
+data_aux = select(data_aux,select = -starts_with('Year'))
+
+empresas_train = c(800015615, 800045720,
+                   800081030, 800112440,
+                   800118660, 800157469,
+                   800232356, 800236890,
+                   801002644, 805012368,
+                   806014553, 830030574,
+                   830037495, 830052054,
+                   860009694, 860050956,
+                   890904459, 890909034,
+                   900173460, 900204182,
+                   900234565, 900378893)
+
+empresas_test = c(806014553, 830037495,
+                   830052054, 860033653,
+                   860501682, 890300012,
+                   890909034, 890929951,
+                   900204182, 900378893,
+                   900437650)
+
+train = all_data$NIT%in%empresas_train
+test = all_data$NIT%in%empresas_test
+
+NIT_train = NIT[train,]
+NIT_test = NIT[test,]
+
+data_train = data_aux[train,]
+rownames(data_train) <- NULL
+data_train_z = data_train#scale(data_train, center = TRUE, scale = TRUE)
+
+media_tr = attr(data_train_z, 'scaled:center')
+stdev_tr = attr(data_train_z, 'scaled:scale')
+
+data_train_z = as.data.frame(data_train_z)
+
+data_test = data_aux[test,]
+rownames(data_test) <- NULL
+data_test_z = data_test#as.data.frame(scale(data_test,  center = media_tr, scale = stdev_tr))
+
+data_train_z$NIT = NIT_train
+data_test_z$NIT = NIT_test
+```
+
+```{r}
+r2_score <- function(x, y) summary(lm(y~x))$r.squared
+adj_r2_score <- function(x, y) summary(lm(y~x))$adj.r.squared
+```
+
+## Modelo para los Costos
+
+### Modelo Lineal General
+
+```{r}
+mod_lin = lm('Costo.de.ventas_dif~PIB+TRM+Desempleo+Inflacion+Tasa_Intervencion+Balance_CC+Balance_Fiscal', data = data_train_z)
+```
+
+```{r}
+summary(mod_lin)
+```
+
+#### Desempeño del Modelo Entrenado
+
+En el conjunto de entrenamiento:
+```{r fig.align='center'}
+preds = predict(mod_lin)
+
+plot(preds, data_train_z$Costo.de.ventas_dif, xlab = 'Valor predicho', ylab = 'Valor Real', 
+     main='Modelo Lineal General')
+abline(a=0, b=1, lwd = 2, col = 'red')
+```
+
+En el conjunto de Prueba
+```{r fig.align='center'}
+preds_test = predict(mod_lin, newdata = data_test_z)
+
+r2_model<-r2_score(preds_test, data_test_z$Costo.de.ventas_dif)
+adj_r2_model<-adj_r2_score(preds_test, data_test_z$Costo.de.ventas_dif)
+
+sub_tit = paste("R2", format(r2_model, digits=2, nsmall=2), 
+                "; R2_adj", format(adj_r2_model, digits=2, nsmall=2), 
+                sep = " ", collapse = NULL)
+
+plot(preds_test, data_test_z$Costo.de.ventas_dif, xlab = 'Valor predicho', ylab = 'Valor Real',
+     main='Modelo Lineal General', sub=sub_tit)
+abline(a=0, b=1, lwd = 2, col = 'red')
+```
+
+### Graficos de Evaluacion de modelos
+
+```{r fig.align='center'}
+par(mfrow=c(3,2))
+mod_plot = plot(mod_lin, which = c(1:6))
+```
+
+De los gráficos anteriores, en particular analizando el valor de la distancia de Cook para las observaciones, notamos que las observaciones 9, 12, 31, 58 son candidatas a ser registros atípicos en el conjunto de datos, por lo que entrenaremos un nuevo modelo eliminando estos registros. Notar que dos de esos outliers corresponden a la empresa con NIT 801002644 para los periodos del 2016 y del 2017, información que se contrasta con los outliers obtenidos en el boxplot, lo cual están incluidos tanto mirando la variable de costos como de gastos. los dos outliers restantes, corresponden a las empresas con NITs 860009694, 860050956 en los años 2016 y 2017 respectivamente. En particular estos registros no son encontrados como outliers en el boxplot, pero analizando en el 2018, ambas empresas si son identificadas como outliers debido a una diferencia significativa en los costos y gastos de venta respectivamente.
+
+```{r}
+### Vector para eliminar registros atipicos según la información obtenida por la distancia de cook
+outliers = c(8, 18, 52)
+data_train_z_noOut = data_train_z[-outliers,]
+```
+
+```{r fig.align='center'}
+h_ii<-hatvalues(mod_lin)
+plot(hatvalues(mod_lin),las=1,xlab="i",ylab="hii",main="Influencia (h_ii)",type="h")
+```
+### Inflacion de la varianza
+
+```{r}
+#vif(mod_lin)
+```
+
+## Entrenamiento del modelo sin Outliers
+
+```{r}
+mod_lin02 = lm('Costo.de.ventas_dif~PIB+TRM+Desempleo+Inflacion+Tasa_Intervencion+Balance_CC+Balance_Fiscal', data = data_train_z_noOut)
+```
+
+```{r}
+summary(mod_lin02)
+```
+
+#### Desempeno del Modelo Entrenado sin Outliers
+
+En el conjunto de entrenamiento:
+```{r fig.align='center'}
+preds = predict(mod_lin02)
+
+plot(preds, data_train_z_noOut$Costo.de.ventas_dif, xlab = 'Valor predicho', ylab = 'Valor Real')
+abline(a=0, b=1, lwd = 2, col = 'red')
+```
+
+En el conjunto de Prueba
+```{r fig.align='center'}
+preds_test = predict(mod_lin02, newdata = data_test_z)
+
+r2_model<-r2_score(preds_test, data_test_z$Costo.de.ventas_dif)
+adj_r2_model<-adj_r2_score(preds_test, data_test_z$Costo.de.ventas_dif)
+
+sub_tit = paste("R2", format(r2_model, digits=2, nsmall=2), 
+                "; R2_adj", format(adj_r2_model, digits=2, nsmall=2), 
+                sep = " ", collapse = NULL)
+
+plot(preds_test, data_test_z$Costo.de.ventas_dif, xlab = 'Valor predicho', ylab = 'Valor Real',
+     main='Modelo Lineal General', sub=sub_tit)
+abline(a=0, b=1, lwd = 2, col = 'red')
+```
+
+## Graficos de Evaluacion de modelos entrenando sin Outliers
+
+```{r fig.align='center'}
+par(mfrow=c(3,2))
+mod_plot = plot(mod_lin02, which = c(1:6))
+```
+
+### Modelo Lineal con Regularizacion
+
+Vamos a encontrar el parametro de regulairzacion
+```{r}
+library(glmnet)
+
+f1 = formula('Costo.de.ventas_dif~-1+PIB+TRM+Desempleo+Inflacion+Tasa_Intervencion+Balance_CC+Balance_Fiscal')
+
+
+X = model.matrix(f1, data = as.data.frame(data_train_z))
+Y = data_train_z$Costo.de.ventas_dif
+
+lambda_grid = 10^seq(10,-2,length.out = 100)
+modelo_regularizacion = cv.glmnet(x = X, y = Y, lambda = lambda_grid)
+```
+
+```{r fig.align='center'}
+plot(modelo_regularizacion) 
+```
+
+Entrenamos el modelo agregando el parametro de regularizacion, y asi ver relevancia de variables
+```{r}
+mod_lin_reg = glmnet(x = X, y = Y, lambda = 0.05, alpha = 1, intercept = FALSE)
+coef(mod_lin_reg)
+```
+
+## Modelos Lineales Generalizados (GLM)
+
+Dentro de los modelos que fueron expuestos a lo largo del curso, se encuentra la familia de los modelos lineales generalizados, los cual nos permiten la creación de modelos teniendo en cuenta diferentes supuestos que se hacen sobre la variable respuesta que estamos considerando. En la elaboración de este trabajo, se está considerando realiza un modelo de predicción sobre la diferencia de los costos de ventas que tienen las empresas, por lo que el dominio de la variable son los números reales (ya que puede tomar valores continuos tanto positivos como negativos). Justo por la caracteristica de la variable respuesta que tenemos, no se considera pertinente realizar evaluacion de los modelos, esta conclusión está apoyada del análisis que se realiza de los diferentes modelos generalizados que podriamos considerar:
+
+* Poisson: Para este modelo, esperamos que la variable respuesta tenga la forma de conteos, no negativa. Por lo que la diferencia de los costos de venta no aplica para este modelo.
+
+* Logit: Este es un modelo logistico, el cual asume que la variable respuesta tendrá un comportamiento dentro del intervalo (0,1) el cual se utiliza para la predicción de la ocurrencia de un evento (ocurre o no ocurre), por lo que tampoco se ajusta para el modelamiento de la diferencia de costos de venta
+
+* Gamma y Gaussiana inversa: De las distribuciones de probabilidad de la función gamma y gaussiana inversa, se sabe que los valores de la variable pueden ser continuos, por lo que nos llevaría a pensar de forma inicial que alguno de estos se puede considerar, pero en vista que tienen otra testricción, y es que los valores son continuos positivos, la variable de diferencia de costo de ventas tampoco se podría modelar con este tipo de modelos, ya que puede tomar valores negativos
+
+* Gaussiana: Por la caracteristica de la distribución, sabemos que es posible modelar variables respuesta que su dominio sea los números reales, por lo que la variable de diferencia de costos de venta encaja en este tipo de modelo, ahora bien, esto es equivalente a considerar el modelo lineal general presentado anteriormente.
+
+Por el análisis realizado, no se considera pertinente utilizar alguno de los otros modelos lineales generalizados para el modela miento de la variable diferencia de costos de venta
+
+
+### Modelo de Efectos Mixtos
+
+
+```{r}
+mod_me = lmer('Costo.de.ventas_dif~Gastos.de.ventas+(Gastos.de.ventas|NIT)', data = data_train_z)
+```
+
+```{r fig.align='center'}
+par(mfrow=c(3,2))
+plot(mod_me, which = c(1:6))
+```
+
+```{r fig.align='center'}
+preds = predict(mod_me)
+plot(preds,data_train_z$Costo.de.ventas_dif, main='Modelo de Efectos Mixtos')
+abline(a=0, b=1, lwd = 2, col = 'red')
+```
+
+```{r fig.align='center'}
+preds = predict(mod_me, newdata = data_test_z,allow.new.levels=TRUE)
+
+r2_model<-r2_score(preds, data_test_z$Costo.de.ventas_dif)
+adj_r2_model<-adj_r2_score(preds, data_test_z$Costo.de.ventas_dif)
+
+sub_tit = paste("R2", format(r2_model, digits=2, nsmall=2), 
+                "; R2_adj", format(adj_r2_model, digits=2, nsmall=2), 
+                sep = " ", collapse = NULL)
+
+plot(preds,data_test_z$Costo.de.ventas_dif, main='Modelo de Efectos Mixtos', sub=sub_tit)
+abline(a=0, b=1, lwd = 2, col = 'red')
+```
+
+Desafortunadamente en el caso de prueba no se logra distinguir la tendencia natural en el comportamiento de la diferencia de los costos de venta y la escala se encuentra muy distante entre los valores predichos y los reales, como se espera desde el gráfico anterior. En esta evaluación los valores predichos se ponderan para generar una tendencia casi constante y la razonabilidad una vez más se pone en duda, aunque no por completo, dado que éstos valores efectivamente pueden ser alcanzados con condiciones ligeramente diferentes.
+ 
+
+```{r}
+## Generalized linear model Lasso
+glm_obj <- glmmLasso(Costo.de.ventas_dif~TRM+PIB+Desempleo+Inflacion+Tasa_Intervencion+Balance_CC+Balance_Fiscal, rnd = list(NIT=~1+PIB+Balance_CC), data = data_train_z, lambda=2.3, family = gaussian(link ="identity"))
+summary(glm_obj)
+```
+
+```{r fig.align='center'}
+preds = predict(glm_obj, data = data_train_z)
+plot(preds,data_train_z$Costo.de.ventas_dif, main='Generalized linear model Lasso')
+abline(a=0, b=1, lwd = 2, col = 'red')
+```
+
+Bajo esta aplicación del modelo Lasso es claro como ya se presenta una mejor distribución de los valores predichos contra los reales y éste es un comportamiento más natural y razonable en la industria, donde si bien hay un par que se alejan del común respecto a las diferencias en los costos de venta, el resto dentro de sus segmentos también puede tener distribuciones similares teniendo en cuenta sus montos.
+
+```{r}
+r2_model_train<-r2_score(preds, data_train_z$Costo.de.ventas_dif)
+adj_r2_model_train<-adj_r2_score(preds, data_train_z$Costo.de.ventas_dif)
+mse_train = mean((data_train_z$Costo.de.ventas_dif - preds)^2)
+
+print(r2_model_train)
+print(adj_r2_model_train)
+print(mse_train)
+```
+
+```{r fig.align='center'}
+preds = predict(glm_obj, newdata = data_test_z)
+plot(preds,data_test_z$Costo.de.ventas_dif)
+abline(a=0, b=1, lwd = 2, col = 'red')
+```
+
+Como se presenta a continuación en esta oportunidad se captura algo de la relación positiva entre los valores predichos y los reales. Exceptuando los valores atipicos la razonabilidad se pone en duda debido al sentido de los signos y la propensión de éstos modelos a entregar resultados en escalas menores a las esperadas.
+
+
+```{r fig.align='center'}
+infl <- influence(mod_me, obs = TRUE)
+cooks.distance(infl)
+plot(infl, which = "cook")
+
+```
+
+```{r}
+r2_model_test<-r2_score(preds, data_test_z$Costo.de.ventas_dif)
+adj_r2_model_test<-adj_r2_score(preds, data_test_z$Costo.de.ventas_dif)
+mse_test = mean((data_test_z$Costo.de.ventas_dif - preds)^2)
+
+print(r2_model_test)
+print(adj_r2_model_test)
+print(mse_test)
+```
+
+```{r fig.align='center'}
+plot(all_data$Year, all_data$Costo.de.ventas, col=all_data$NIT, xlab = "Año", ylab = "Valor del Costo de Venta por Empresa")
+```
+
+
+```{r}
+## Generalized linear model Lasso quitando empresa outlier
+data_train_z_sinoutl = data_train_z[-c(12, 34, 56), ]
+glm_obj_s <- glmmLasso(Costo.de.ventas_dif~TRM+PIB+Balance_CC+Desempleo+Balance_Fiscal, rnd = list(NIT=~1+PIB), data = data_train_z_sinoutl, lambda=5, family = gaussian(link ="identity"))
+summary(glm_obj_s)
+```
+
+ 
+```{r fig.align='center'}
+preds = predict(glm_obj_s, data = data_train_z_sinoutl)
+plot(preds,data_train_z_sinoutl$Costo.de.ventas_dif, main='Generalized linear model Lasso wihtout outliers')
+abline(a=0, b=1, lwd = 2, col = 'red')
+```
+
+Aplicando la remoción de outliers la distribución hacia el centro de los datos se extiende más y esto es deseado, y la escala no se ve demasiado afectada por la corrección. En términos de mercado esta clase de resultados es la más natural y razonable entre todas, donde es claro como los indicadores macro-economicos pueden afectar de manera diferente a cada componente que representa la industria.
+
+
+```{r}
+r2_model_train_sinoutl<-r2_score(preds, data_train_z_sinoutl$Costo.de.ventas_dif)
+adj_r2_model_train_sinoutl<-adj_r2_score(preds, data_train_z_sinoutl$Costo.de.ventas_dif)
+mse_sinoutl = mean((data_train_z_sinoutl$Costo.de.ventas_dif - preds)^2)
+
+print(r2_model_train_sinoutl)
+print(adj_r2_model_train_sinoutl)
+print(mse_sinoutl)
+```
+
+ 
+```{r fig.align='center'}
+preds = predict(glm_obj_s, newdata = data_test_z)
+plot(preds,data_test_z$Costo.de.ventas_dif)
+abline(a=0, b=1, lwd = 2, col = 'red')
+```
+
+Probando con el conjunto de testeo puede verse en comparación al resultado en test del modelo anterior que la distorsión se evidencia hacia los valores mayores en el conjunto predicho y el sentido de los signos, lo que le reduce razonabilidad. Sobre el efecto de escala éste se esperaba dado el resultado en el set de entrenamiento.
+
+```{r}
+r2_model_test_sinoutl<-r2_score(preds, data_test_z$Costo.de.ventas_dif)
+adj_r2_model_test_sinoutl<-adj_r2_score(preds, data_test_z$Costo.de.ventas_dif)
+mse_sinoutl_test = mean((data_test_z$Costo.de.ventas_dif - preds)^2)
+
+print(r2_model_test_sinoutl)
+print(adj_r2_model_test_sinoutl)
+print(mse_sinoutl_test)
+```
+
+```{r}
+## Transformacion de variables (productos y divisiones)
+vars = c("TRM","PIB","Desempleo","Inflacion","Tasa_Intervencion","Balance_CC","Balance_Fiscal")
+df = data_train_z[vars]
+# x^2
+df_p <- df^2
+vector = c()
+for (i in colnames(df)) vector <- c(vector, paste(i,'_p_',i, sep  = ''))
+colnames(df_p) <-  vector
+# xi*xj
+df_s <- do.call(cbind,combn(colnames(df), 2,
+               FUN= function(x) list(df[x[1]]*df[x[2]])))
+colnames(df_s) <-  combn(colnames(df), 2,
+                 FUN = paste, collapse="_p_")
+# xi/xj
+df_t <- do.call(cbind,combn(colnames(df), 2,
+               FUN= function(x) list(df[x[1]]/df[x[2]])))
+colnames(df_t) <-  combn(colnames(df), 2,
+                 FUN = paste, collapse="_d_")
+df_trans=cbind(data_train_z,df_p,df_s,df_t)
+```
+
+```{r}
+## Generalized linear model Lasso con todas las transformaciones
+glm_obj <- glmmLasso(Costo.de.ventas_dif~TRM+PIB+Desempleo+Inflacion+Tasa_Intervencion+Balance_CC+Balance_Fiscal+TRM_p_TRM+PIB_p_PIB+Desempleo_p_Desempleo+Inflacion_p_Inflacion+Tasa_Intervencion_p_Tasa_Intervencion+Balance_CC_p_Balance_CC+Balance_Fiscal_p_Balance_Fiscal+TRM_p_PIB+TRM_p_Desempleo+TRM_p_Inflacion+TRM_p_Tasa_Intervencion+TRM_p_Balance_CC+TRM_p_Balance_Fiscal+PIB_p_Desempleo+PIB_p_Inflacion+PIB_p_Tasa_Intervencion+PIB_p_Balance_CC+PIB_p_Balance_Fiscal+Desempleo_p_Inflacion+Desempleo_p_Tasa_Intervencion+Desempleo_p_Balance_CC+Desempleo_p_Balance_Fiscal+Inflacion_p_Tasa_Intervencion+Inflacion_p_Balance_CC+Inflacion_p_Balance_Fiscal+Tasa_Intervencion_p_Balance_CC+Tasa_Intervencion_p_Balance_Fiscal+Balance_CC_p_Balance_Fiscal+TRM_d_PIB+TRM_d_Desempleo+TRM_d_Inflacion+TRM_d_Tasa_Intervencion+TRM_d_Balance_CC+TRM_d_Balance_Fiscal+PIB_d_Desempleo+PIB_d_Inflacion+PIB_d_Tasa_Intervencion+PIB_d_Balance_CC+PIB_d_Balance_Fiscal+Desempleo_d_Inflacion+Desempleo_d_Tasa_Intervencion+Desempleo_d_Balance_CC+Desempleo_d_Balance_Fiscal+Inflacion_d_Tasa_Intervencion+Inflacion_d_Balance_CC+Inflacion_d_Balance_Fiscal+Tasa_Intervencion_d_Balance_CC+Tasa_Intervencion_d_Balance_Fiscal+Balance_CC_d_Balance_Fiscal, rnd = list(NIT=~1+PIB+Balance_CC), data = df_trans, lambda=15, family = gaussian(link ="identity"))
+summary(glm_obj)
+### Para que converja, toca poner un lamba alto. Esto conlleva a que todas las betas sean 0
+### Un lambda menor lleva a que la matriz no sea invertible
+```
+
+### Lambda bajo
+```{r}
+## Generalized linear model Lasso con todas las transformaciones de Balance_CC
+glm_obj_tr <- glmmLasso(Costo.de.ventas_dif~Balance_CC+PIB+Balance_Fiscal, rnd = list(NIT=~1+PIB+Balance_CC), data = df_trans, lambda=1, family = gaussian(link ="identity"))
+summary(glm_obj_tr)
+
+```
+
+```{r fig.align='center'}
+preds = predict(glm_obj_tr, data = data_train_z)
+plot(preds,data_train_z$Costo.de.ventas_dif)
+abline(a=0, b=1, lwd = 2, col = 'red', main='Lambda bajo')
+```
+```{r}
+r2_model_train_new<-r2_score(preds, data_train_z$Costo.de.ventas_dif)
+adj_r2_model_train_new<-adj_r2_score(preds, data_train_z$Costo.de.ventas_dif)
+mse_new = mean((data_train_z$Costo.de.ventas_dif - preds)^2)
+
+print(r2_model_train_new)
+print(adj_r2_model_train_new)
+print(mse_new)
+```
+
+```{r fig.align='center'}
+preds = predict(glm_obj_tr, newdata = data_test_z)
+plot(preds,data_test_z$Costo.de.ventas_dif)
+abline(a=0, b=1, lwd = 2, col = 'red')
+```
+
+```{r}
+r2_model_test_new<-r2_score(preds, data_test_z$Costo.de.ventas_dif)
+adj_r2_model_test_new<-adj_r2_score(preds, data_test_z$Costo.de.ventas_dif)
+mse_new_test = mean((data_test_z$Costo.de.ventas_dif - preds)^2)
+
+print(r2_model_test_new)
+print(adj_r2_model_test_new)
+print(mse_new_test)
+```
+
+### Lambda alto
+```{r}
+## Generalized linear model Lasso con todas las transformaciones de Balance_CC
+glm_obj_tr <- glmmLasso(Costo.de.ventas_dif~Balance_CC+PIB+Balance_Fiscal, rnd = list(NIT=~1+PIB+Balance_CC), data = df_trans, lambda=12, family = gaussian(link ="identity"))
+summary(glm_obj_tr)
+
+```
+
+```{r fig.align='center'}
+preds = predict(glm_obj_tr, data = data_train_z)
+plot(preds,data_train_z$Costo.de.ventas_dif, main = 'Lambda alto')
+abline(a=0, b=1, lwd = 2, col = 'red')
+```
+
+```{r}
+r2_model_train_new<-r2_score(preds, data_train_z$Costo.de.ventas_dif)
+adj_r2_model_train_new<-adj_r2_score(preds, data_train_z$Costo.de.ventas_dif)
+mse_new = mean((data_train_z$Costo.de.ventas_dif - preds)^2)
+
+print(r2_model_train_new)
+print(adj_r2_model_train_new)
+print(mse_new)
+``` 
+
+```{r fig.align='center'}
+preds = predict(glm_obj_tr, newdata = data_test_z)
+plot(preds,data_test_z$Costo.de.ventas_dif)
+abline(a=0, b=1, lwd = 2, col = 'red')
+```
+
+```{r}
+r2_model_test_new<-r2_score(preds, data_test_z$Costo.de.ventas_dif)
+adj_r2_model_test_new<-adj_r2_score(preds, data_test_z$Costo.de.ventas_dif)
+mse_new_test = mean((data_test_z$Costo.de.ventas_dif - preds)^2)
+
+print(r2_model_test_new)
+print(adj_r2_model_test_new)
+print(mse_new_test)
+```
