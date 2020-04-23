@@ -315,6 +315,16 @@ data_aux = select(data_aux,select = -starts_with('Year'))
 
 ### Transformacion 1: a nivel logaritmico
 data_aux$Costo.de.ventas_dif = log(1 + all_data$Costo.de.ventas_dif)
+data_aux$PIB = log(1 + all_data$PIB)
+data_aux$TRM = log(1 + all_data$TRM)
+data_aux$Desempleo = log(1 + all_data$Desempleo)
+data_aux$Balance_CC = log(1 + all_data$Balance_CC)
+data_aux$Balance_Fiscal = log(1 + all_data$Balance_Fiscal)
+data_aux$Inflacion = log(1 + all_data$Inflacion)
+data_aux$Tasa_Intervencion = log(1 + all_data$Tasa_Intervencion)
+
+
+
 
 ### Transformacion 2: log(costos sobre gastos)
 #data_aux$Costo.de.ventas_dif = log(all_data$Costo.de.ventas/all_data$Gastos.de.ventas)
@@ -528,7 +538,8 @@ Por el análisis realizado, no se considera pertinente utilizar alguno de los ot
 
 
 ```{r}
-mod_me = lmer('Costo.de.ventas_dif~Gastos.de.ventas+(Gastos.de.ventas|NIT)', data = data_train_z)
+mod_me = lmer('Costo.de.ventas_dif~TRM+PIB+(TRM|NIT)+(PIB|NIT)', data = data_train_z)
+summary(mod_me)
 ```
 
 ```{r fig.align='center'}
@@ -561,7 +572,7 @@ Desafortunadamente en el caso de prueba no se logra distinguir la tendencia natu
 
 ```{r}
 ## Generalized linear model Lasso
-glm_obj <- glmmLasso(Costo.de.ventas_dif~TRM+PIB+Desempleo+Inflacion+Tasa_Intervencion+Balance_CC+Balance_Fiscal, rnd = list(NIT=~1+PIB+Balance_CC), data = data_train_z, lambda=2.3, family = gaussian(link ="identity"))
+glm_obj <- glmmLasso(Costo.de.ventas_dif~TRM+PIB+Desempleo+Inflacion+Balance_CC+Balance_Fiscal+Tasa_Intervencion, rnd = list(NIT=~1+PIB), data = data_train_z, lambda=1.6, family = gaussian(link ="identity"))
 summary(glm_obj)
 ```
 
@@ -614,10 +625,11 @@ plot(all_data$Year, all_data$Costo.de.ventas, col=all_data$NIT, xlab = "Año", y
 ```
 
 
+
 ```{r}
 ## Generalized linear model Lasso quitando empresa outlier
-data_train_z_sinoutl = data_train_z[-c(12, 34, 56), ]
-glm_obj_s <- glmmLasso(Costo.de.ventas_dif~TRM+PIB+Balance_CC+Desempleo+Balance_Fiscal, rnd = list(NIT=~1+PIB), data = data_train_z_sinoutl, lambda=5, family = gaussian(link ="identity"))
+data_train_z_sinoutl = data_train_z[-c(8, 30, 52), ]
+glm_obj_s <- glmmLasso(Costo.de.ventas_dif~TRM+PIB+Balance_CC+Desempleo+Balance_Fiscal, rnd = list(NIT=~1+PIB+Desempleo), data = data_train_z_sinoutl, lambda=2, family = gaussian(link ="identity"))
 summary(glm_obj_s)
 ```
 
@@ -660,6 +672,7 @@ print(adj_r2_model_test_sinoutl)
 print(mse_sinoutl_test)
 ```
 
+
 ```{r}
 ## Transformacion de variables (productos y divisiones)
 vars = c("TRM","PIB","Desempleo","Inflacion","Tasa_Intervencion","Balance_CC","Balance_Fiscal")
@@ -684,16 +697,16 @@ df_trans=cbind(data_train_z,df_p,df_s,df_t)
 
 ```{r}
 ## Generalized linear model Lasso con todas las transformaciones
-glm_obj <- glmmLasso(Costo.de.ventas_dif~TRM+PIB+Desempleo+Inflacion+Tasa_Intervencion+Balance_CC+Balance_Fiscal+TRM_p_TRM+PIB_p_PIB+Desempleo_p_Desempleo+Inflacion_p_Inflacion+Tasa_Intervencion_p_Tasa_Intervencion+Balance_CC_p_Balance_CC+Balance_Fiscal_p_Balance_Fiscal+TRM_p_PIB+TRM_p_Desempleo+TRM_p_Inflacion+TRM_p_Tasa_Intervencion+TRM_p_Balance_CC+TRM_p_Balance_Fiscal+PIB_p_Desempleo+PIB_p_Inflacion+PIB_p_Tasa_Intervencion+PIB_p_Balance_CC+PIB_p_Balance_Fiscal+Desempleo_p_Inflacion+Desempleo_p_Tasa_Intervencion+Desempleo_p_Balance_CC+Desempleo_p_Balance_Fiscal+Inflacion_p_Tasa_Intervencion+Inflacion_p_Balance_CC+Inflacion_p_Balance_Fiscal+Tasa_Intervencion_p_Balance_CC+Tasa_Intervencion_p_Balance_Fiscal+Balance_CC_p_Balance_Fiscal+TRM_d_PIB+TRM_d_Desempleo+TRM_d_Inflacion+TRM_d_Tasa_Intervencion+TRM_d_Balance_CC+TRM_d_Balance_Fiscal+PIB_d_Desempleo+PIB_d_Inflacion+PIB_d_Tasa_Intervencion+PIB_d_Balance_CC+PIB_d_Balance_Fiscal+Desempleo_d_Inflacion+Desempleo_d_Tasa_Intervencion+Desempleo_d_Balance_CC+Desempleo_d_Balance_Fiscal+Inflacion_d_Tasa_Intervencion+Inflacion_d_Balance_CC+Inflacion_d_Balance_Fiscal+Tasa_Intervencion_d_Balance_CC+Tasa_Intervencion_d_Balance_Fiscal+Balance_CC_d_Balance_Fiscal, rnd = list(NIT=~1+PIB+Balance_CC), data = df_trans, lambda=15, family = gaussian(link ="identity"))
+glm_obj <- glmmLasso(Costo.de.ventas_dif~TRM+PIB+Desempleo+Inflacion+Tasa_Intervencion+Balance_CC+Balance_Fiscal+TRM_p_TRM+PIB_p_PIB+Desempleo_p_Desempleo+Inflacion_p_Inflacion+Tasa_Intervencion_p_Tasa_Intervencion+Balance_CC_p_Balance_CC+Balance_Fiscal_p_Balance_Fiscal+TRM_p_PIB+TRM_p_Desempleo+TRM_p_Inflacion+TRM_p_Tasa_Intervencion+TRM_p_Balance_CC+TRM_p_Balance_Fiscal+PIB_p_Desempleo+PIB_p_Inflacion+PIB_p_Tasa_Intervencion+PIB_p_Balance_CC+PIB_p_Balance_Fiscal+Desempleo_p_Inflacion+Desempleo_p_Tasa_Intervencion+Desempleo_p_Balance_CC+Desempleo_p_Balance_Fiscal+Inflacion_p_Tasa_Intervencion+Inflacion_p_Balance_CC+Inflacion_p_Balance_Fiscal+Tasa_Intervencion_p_Balance_CC+Tasa_Intervencion_p_Balance_Fiscal+Balance_CC_p_Balance_Fiscal+TRM_d_PIB+TRM_d_Desempleo+TRM_d_Inflacion+TRM_d_Tasa_Intervencion+TRM_d_Balance_CC+TRM_d_Balance_Fiscal+PIB_d_Desempleo+PIB_d_Inflacion+PIB_d_Tasa_Intervencion+PIB_d_Balance_CC+PIB_d_Balance_Fiscal+Desempleo_d_Inflacion+Desempleo_d_Tasa_Intervencion+Desempleo_d_Balance_CC+Desempleo_d_Balance_Fiscal+Inflacion_d_Tasa_Intervencion+Inflacion_d_Balance_CC+Inflacion_d_Balance_Fiscal+Tasa_Intervencion_d_Balance_CC+Tasa_Intervencion_d_Balance_Fiscal+Balance_CC_d_Balance_Fiscal, rnd = list(NIT=~1+PIB+Balance_CC), data = df_trans, lambda=2.55, family = gaussian(link ="identity"))
 summary(glm_obj)
 ### Para que converja, toca poner un lamba alto. Esto conlleva a que todas las betas sean 0
 ### Un lambda menor lleva a que la matriz no sea invertible
 ```
 
-### Lambda bajo
+### Lambda bajo (variable PIB, TRM y Balance Fiscal)
 ```{r}
-## Generalized linear model Lasso con todas las transformaciones de Balance_CC
-glm_obj_tr <- glmmLasso(Costo.de.ventas_dif~Balance_CC+PIB+Balance_Fiscal, rnd = list(NIT=~1+PIB+Balance_CC), data = df_trans, lambda=1, family = gaussian(link ="identity"))
+## Generalized linear model Lasso 
+glm_obj_tr <- glmmLasso(Costo.de.ventas_dif~PIB+TRM+Balance_Fiscal, rnd = list(NIT=~1+PIB+TRM+Balance_Fiscal), data = df_trans, lambda=0.1, family = gaussian(link ="identity"))
 summary(glm_obj_tr)
 
 ```
@@ -729,10 +742,10 @@ print(adj_r2_model_test_new)
 print(mse_new_test)
 ```
 
-### Lambda alto
+### Lambda alto  (variable PIB, TRM y Balance Fiscal)
 ```{r}
-## Generalized linear model Lasso con todas las transformaciones de Balance_CC
-glm_obj_tr <- glmmLasso(Costo.de.ventas_dif~Balance_CC+PIB+Balance_Fiscal, rnd = list(NIT=~1+PIB+Balance_CC), data = df_trans, lambda=12, family = gaussian(link ="identity"))
+## Generalized linear model Lasso
+glm_obj_tr <- glmmLasso(Costo.de.ventas_dif~PIB+TRM+Balance_Fiscal, rnd = list(NIT=~1+PIB+TRM+Balance_Fiscal), data = df_trans, lambda=2.4, family = gaussian(link ="identity"))
 summary(glm_obj_tr)
 
 ```
