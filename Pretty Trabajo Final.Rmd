@@ -548,7 +548,7 @@ Por el análisis realizado, no se considera pertinente utilizar alguno de los ot
 
 
 ```{r}
-mod_me = lmer('Costo.de.ventas_dif~TRM+PIB+(TRM|NIT)+(PIB|NIT)', data = data_train_z)
+mod_me = lmer('Costo.de.ventas_dif~Desempleo+PIB+(0+Desempleo|NIT)+(PIB|NIT)', data = data_train_z)
 summary(mod_me)
 ```
 
@@ -581,26 +581,47 @@ Desafortunadamente en el caso de prueba no se logra distinguir la tendencia natu
  
  
  
-### Superficie del modelo
+### Superficie poblacional del modelo
 
 ```{r}
 
-TRM = seq(min(data_train_z$TRM),max(data_train_z$TRM), length.out = 50)
+Desempleo = seq(min(data_train_z$Desempleo),max(data_train_z$Desempleo), length.out = 50)
 PIB = seq(min(data_train_z$PIB),max(data_train_z$PIB), length.out = 50)
 
-data_surface = expand.grid(TRM,PIB)
-names(data_surface) = c('PIB','TRM')
+data_surface = expand.grid(Desempleo,PIB)
+names(data_surface) = c('Desempleo','PIB')
 data_surface$NIT = 1000
 
 z = predict(mod_me, newdata = data_surface,allow.new.levels=TRUE)
 z = matrix(z, nrow = 50, ncol = 50)
 
 ### Toca rotar la figura para poder ver el plano
-fig <- plot_ly(x = PIB, y = TRM, z = z) %>% add_surface()
+fig <- plot_ly(x = PIB, y = Desempleo, z = z) %>% add_surface()
 fig
 
 ```
 
+
+### Superficie del modelo para un individuo conocido
+
+```{r}
+
+Desempleo = seq(min(data_train_z$Desempleo),max(data_train_z$Desempleo), length.out = 50)
+PIB = seq(min(data_train_z$PIB),max(data_train_z$PIB), length.out = 50)
+
+data_surface = expand.grid(Desempleo,PIB)
+names(data_surface) = c('Desempleo','PIB')
+data_surface$NIT = 800015615
+
+z2 = predict(mod_me, newdata = data_surface)
+z2 = matrix(z2, nrow = 50, ncol = 50)
+
+### Toca rotar la figura para poder ver el plano
+fig %>% add_surface(z = ~z2, opacity = 0.98,colorscale = list(c(0,1),c("rgb(255,112,184)","rgb(120,0,64)"))) %>% layout(title="Poblacional (azul y verde) vs Un Individuo (Rosa)")
+#fig <- plot_ly(x = PIB, y = Desempleo, z = z) %>% add_surface()
+#fig
+
+```
  
 
 ```{r}
