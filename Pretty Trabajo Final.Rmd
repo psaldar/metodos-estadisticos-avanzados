@@ -22,6 +22,7 @@ library(corrplot)
 library(mvtnorm)
 library(ggplot2)
 library(gridExtra)
+library(formattable)
 library(kableExtra)
 library(dplyr)
 library(lme4)
@@ -63,9 +64,21 @@ data = all_data[,-c(1,2)]
 ## Análisis descriptivo
 Damos una visualizacion inicial al conjunto de datos con el que se va a trabajar:
 
-```{r}
-kable(head(round(data,2))) %>%
-  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
+```{r echo=FALSE}
+ref_ds=head(round(data,2))
+
+ref_ds$Costo.de.ventas <- currency(ref_ds$Costo.de.ventas, digits = 0L)
+ref_ds$Gastos.de.ventas	 <- currency(ref_ds$Gastos.de.ventas, digits = 0L)
+ref_ds$TRM<- percent(ref_ds$TRM, format = "d", digits = 2L)
+ref_ds$PIB<- percent(ref_ds$PIB, format = "d", digits = 2L)
+ref_ds$Desempleo<- percent(ref_ds$Desempleo, format = "d", digits = 2L)
+ref_ds$Inflacion<- percent(ref_ds$Inflacion, format = "d", digits = 2L)
+ref_ds$Tasa_Intervencion<- percent(ref_ds$Tasa_Intervencion, format = "d", digits = 2L)
+ref_ds$Balance_CC<- percent(ref_ds$Balance_CC, format = "d", digits = 2L)
+ref_ds$Balance_Fiscal<- percent(ref_ds$Balance_Fiscal, format = "d", digits = 2L)
+
+kable(ref_ds) %>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T, font_size = 12)%>%
   scroll_box("100%", height = "300px")
 ```
 
@@ -74,7 +87,7 @@ En la siguiente tabla, vemos información descriptiva de las variables que se co
 ```{r}
 summary_df = stat.desc(data)
 kable(summary_df) %>%
-  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T, font_size = 12)%>%
   scroll_box("100%", height = "300px")
 
 ```
@@ -119,7 +132,7 @@ kable(
   caption = 'Media y Mediana',
   booktabs = TRUE, valign = 't'
 ) %>%
-  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T, font_size = 15)
 ```
 ### Análisis desde variables absolutas
 #### Boxplot
@@ -196,8 +209,8 @@ Asi, estos cambios en las industrias en sus costos y gastos de ventas, pueden es
 #### Matriz de Covarianzas
 ```{r}
 cov_data = cov(data)
-kable(formatC(cov_data,format = "e", digits = 2)) %>%
-  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
+kable(formatC(cov_data,format = "e", digits = 4)) %>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T, font_size = 12)%>%
   scroll_box("100%", height = "480px")
 ```
 
@@ -205,7 +218,7 @@ kable(formatC(cov_data,format = "e", digits = 2)) %>%
 ```{r}
 cor_data = cor(data)
 kable(round(cor_data,2)) %>%
-  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T, font_size = 12)%>%
   scroll_box("100%", height = "480px")
 
 ```
@@ -410,10 +423,21 @@ En el conjunto de entrenamiento:
 ```{r fig.align='center'}
 preds = predict(mod_lin)
 
-plot(preds, data_train_z$Costo.de.ventas_dif, xlab = 'Valor predicho', ylab = 'Valor Real', 
-     main='Modelo Lineal General')
+plot(preds, data_train_z$Costo.de.ventas_dif, xlab = 'Valor predicho', ylab = 'Valor Real', main='Modelo Lineal General')
 abline(a=0, b=1, lwd = 2, col = 'red')
 ```
+```{r echo = FALSE}
+Medidas = c("r2 train", "r2 adj train", "mse train") 
+Resultados = c(r2_score(preds, data_train_z$Costo.de.ventas_dif), adj_r2_score(preds, data_train_z$Costo.de.ventas_dif), mean((data_train_z$Costo.de.ventas_dif - preds)^2)) 
+
+measures = data.frame(Medidas, Resultados)
+
+kable(measures)%>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
+  column_spec(1,bold=T)
+```
+
+
 
 En el conjunto de Prueba
 ```{r fig.align='center'}
@@ -421,6 +445,7 @@ preds_test = predict(mod_lin, newdata = data_test_z)
 
 r2_model<-r2_score(preds_test, data_test_z$Costo.de.ventas_dif)
 adj_r2_model<-adj_r2_score(preds_test, data_test_z$Costo.de.ventas_dif)
+mse_model<-mean((data_test_z$Costo.de.ventas_dif - preds_test)^2)
 
 sub_tit = paste("R2", format(r2_model, digits=2, nsmall=2), 
                 "; R2_adj", format(adj_r2_model, digits=2, nsmall=2), 
@@ -430,6 +455,18 @@ plot(preds_test, data_test_z$Costo.de.ventas_dif, xlab = 'Valor predicho', ylab 
      main='Modelo Lineal General', sub=sub_tit)
 abline(a=0, b=1, lwd = 2, col = 'red')
 ```
+
+```{r echo = FALSE}
+Medidas = c("r2 test", "r2 adj test", "mse test") 
+Resultados = c(r2_model,adj_r2_model,mse_model)
+
+measures = data.frame(Medidas, Resultados)
+
+kable(measures)%>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
+  column_spec(1,bold=T)
+```
+
 
 ### Graficos de Evaluacion de modelos
 
@@ -478,12 +515,24 @@ plot(preds, data_train_z_noOut$Costo.de.ventas_dif, xlab = 'Valor predicho', yla
 abline(a=0, b=1, lwd = 2, col = 'red')
 ```
 
+```{r echo = FALSE}
+Medidas = c("r2 train", "r2 adj train", "mse train") 
+Resultados = c(r2_score(preds, data_train_z_noOut$Costo.de.ventas_dif), adj_r2_score(preds, data_train_z_noOut$Costo.de.ventas_dif), mean((data_train_z_noOut$Costo.de.ventas_dif - preds)^2)) 
+
+measures = data.frame(Medidas, Resultados)
+
+kable(measures)%>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
+  column_spec(1,bold=T)
+```
+
 En el conjunto de Prueba
 ```{r fig.align='center'}
 preds_test = predict(mod_lin02, newdata = data_test_z)
 
 r2_model<-r2_score(preds_test, data_test_z$Costo.de.ventas_dif)
 adj_r2_model<-adj_r2_score(preds_test, data_test_z$Costo.de.ventas_dif)
+mse_model<-mean((data_test_z$Costo.de.ventas_dif - preds_test)^2)
 
 sub_tit = paste("R2", format(r2_model, digits=2, nsmall=2), 
                 "; R2_adj", format(adj_r2_model, digits=2, nsmall=2), 
@@ -492,6 +541,17 @@ sub_tit = paste("R2", format(r2_model, digits=2, nsmall=2),
 plot(preds_test, data_test_z$Costo.de.ventas_dif, xlab = 'Valor predicho', ylab = 'Valor Real',
      main='Modelo Lineal General', sub=sub_tit)
 abline(a=0, b=1, lwd = 2, col = 'red')
+```
+
+```{r echo = FALSE}
+Medidas = c("r2 test", "r2 adj test", "mse test") 
+Resultados = c(r2_model,adj_r2_model,mse_model)
+
+measures = data.frame(Medidas, Resultados)
+
+kable(measures)%>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
+  column_spec(1,bold=T)
 ```
 
 ## Graficos de Evaluacion de modelos entrenando sin Outliers
@@ -563,11 +623,23 @@ plot(preds,data_train_z$Costo.de.ventas_dif, main='Modelo de Efectos Mixtos')
 abline(a=0, b=1, lwd = 2, col = 'red')
 ```
 
+```{r echo = FALSE}
+Medidas = c("r2 train", "r2 adj train", "mse train") 
+Resultados = c(r2_score(preds, data_train_z$Costo.de.ventas_dif), adj_r2_score(preds, data_train_z$Costo.de.ventas_dif), mean((data_train_z$Costo.de.ventas_dif - preds)^2)) 
+
+measures = data.frame(Medidas, Resultados)
+
+kable(measures)%>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
+  column_spec(1,bold=T)
+```
+
 ```{r fig.align='center'}
 preds = predict(mod_me, newdata = data_test_z,allow.new.levels=TRUE)
 
 r2_model<-r2_score(preds, data_test_z$Costo.de.ventas_dif)
 adj_r2_model<-adj_r2_score(preds, data_test_z$Costo.de.ventas_dif)
+mse_model<-mean((data_test_z$Costo.de.ventas_dif - preds)^2)
 
 sub_tit = paste("R2", format(r2_model, digits=2, nsmall=2), 
                 "; R2_adj", format(adj_r2_model, digits=2, nsmall=2), 
@@ -575,6 +647,18 @@ sub_tit = paste("R2", format(r2_model, digits=2, nsmall=2),
 
 plot(preds,data_test_z$Costo.de.ventas_dif, main='Modelo de Efectos Mixtos', sub=sub_tit)
 abline(a=0, b=1, lwd = 2, col = 'red')
+```
+
+
+```{r echo = FALSE}
+Medidas = c("r2 test", "r2 adj test", "mse test") 
+Resultados = c(r2_model,adj_r2_model,mse_model)
+
+measures = data.frame(Medidas, Resultados)
+
+kable(measures)%>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
+  column_spec(1,bold=T)
 ```
 
 Desafortunadamente en el caso de prueba no se logra distinguir la tendencia natural en el comportamiento de la diferencia de los costos de venta y la escala se encuentra muy distante entre los valores predichos y los reales, como se espera desde el gráfico anterior. En esta evaluación los valores predichos se ponderan para generar una tendencia casi constante y la razonabilidad una vez más se pone en duda, aunque no por completo, dado que éstos valores efectivamente pueden ser alcanzados con condiciones ligeramente diferentes.
