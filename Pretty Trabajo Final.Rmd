@@ -1,6 +1,6 @@
 ---
 title: <center>Trabajo Final <br> <font size="5">Métodos Estadísticos Avanzados en Ciencia de los Datos</font></center>
-author: <center>Pablo Saldarriaga-Aristizabal, Nicolás Prieto-Escobar, Obed Rios-Ruiz</center>
+author: <center>Pablo Saldarriaga-Aristizabal, Nicolás Prieto-Escobar, Obed Ríos-Ruiz</center>
 date: <center>Semestre 2020-1</center>
 output: html_document
 ---
@@ -18,6 +18,7 @@ library(kableExtra)
 library(matrixStats)
 library(Hmisc)
 library(pastecs)
+library(formattable)
 library(corrplot)
 library(mvtnorm)
 library(ggplot2)
@@ -54,30 +55,40 @@ nacional. Un punto importante es que algunas compañías del sector podrán segu
 Frente a la incertidumbre que generan estos escenarios y como la dinámica particular de cada compañía que aporta al crecimiento de la industria total evoluciona en el tiempo se torna relevante construir análisis y modelos estadísticos robustos que respondan a las perturbaciones en el mercado y permitan obtener información
 valiosa para la toma de decisiones.
 
-## Consolidación de información
+## Lectura de los datos
 
 ```{r}
-all_data = read.csv("PreparacionDatos/Datos_completos.csv", encoding="UTF-8")
+all_data = read.csv("PreparacionDatos/Datos_completos.csv", encoding = "UTF-8")
 NIT = all_data['NIT'] 
-data = all_data[,-c(1,2)]
+data = all_data[, -c(1,2)]
 ```
 
 ## Análisis descriptivo
 Damos una visualizacion inicial al conjunto de datos con el que se va a trabajar:
 
-```{r}
-kable(head(round(data,2))) %>%
-  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
-  scroll_box("100%", height = "300px")
+```{r echo=FALSE}
+ref_ds=head(round(data,2))
+ref_ds$Costo.de.ventas <- currency(ref_ds$Costo.de.ventas, digits = 0L)
+ref_ds$Gastos.de.ventas	 <- currency(ref_ds$Gastos.de.ventas, digits = 0L)
+ref_ds$TRM<- percent(ref_ds$TRM, format = "d", digits = 2L)
+ref_ds$PIB<- percent(ref_ds$PIB, format = "d", digits = 2L)
+ref_ds$Desempleo<- percent(ref_ds$Desempleo, format = "d", digits = 2L)
+ref_ds$Inflacion<- percent(ref_ds$Inflacion, format = "d", digits = 2L)
+ref_ds$Tasa_Intervencion<- percent(ref_ds$Tasa_Intervencion, format = "d", digits = 2L)
+ref_ds$Balance_CC<- percent(ref_ds$Balance_CC, format = "d", digits = 2L)
+ref_ds$Balance_Fiscal<- percent(ref_ds$Balance_Fiscal, format = "d", digits = 2L)
+kable(ref_ds) %>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T, font_size = 12)%>%
+  scroll_box("100%", height = "250px")
 ```
 
 En la siguiente tabla, vemos información descriptiva de las variables que se considerarán en la etapa de modelamiento del trabajo, vemos así que contamos con un total de 11 variables, cada una con magnitudes diferentes. Vemos que algunos indicadores tienen valores entre 0 y 1 tal como lo es el desempleo, mientras que otras variables representan dinero, tal como la trm, el monto de gastos y ventas. Así, tenemos una idea inicial de las características del conjunto de datos, por lo que se aplicarán lo métodos correspondientes cuando sea necesario, si lo que se realizará es sensible a la escala de los datos.
 
-```{r}
+```{r echo=FALSE}
 summary_df = stat.desc(data)
 kable(summary_df) %>%
   kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
-  scroll_box("100%", height = "300px")
+  scroll_box("100%", height = "580px")
 
 ```
 
@@ -164,7 +175,6 @@ bxplot_gastos_dif = boxplot(Gastos.de.ventas_dif~Year, data = all_data)
 
 ```{r}
 ### Outliers para costos dif
-
 nits_tab = t(all_data[(all_data$Costo.de.ventas_dif %in% bxplot_costos_dif$out),]$NIT)
 rownames(nits_tab) <- c("NITs")
 
@@ -175,7 +185,6 @@ kable(nits_tab)%>%
 
 ```{r}
 ### Outliers para gastos dif
-
 nits_tab = t(all_data[(all_data$Gastos.de.ventas_dif %in% bxplot_gastos_dif$out),]$NIT)
 rownames(nits_tab) <- c("NITs")
 
@@ -314,7 +323,7 @@ p4 = grafica(data, "Costo.de.ventas_dif" , "Gastos.de.ventas_dif")
 
 Para la variable costos de venta, adicional a la transformación que se realizó para obtener la diferencia relativa entre los periodos, en la etapa de modeloamiento, consideraremos para la variable salida la siguiente transformacion:
 
-Ec2 log(1+diff)
+$$log(1+diff)$$
 
 Adicionalmente, a los predictores se les realizó la misma transformación.
 
@@ -341,7 +350,9 @@ data_aux$Balance_CC = log(1 + all_data$Balance_CC)
 data_aux$Balance_Fiscal = log(1 + all_data$Balance_Fiscal)
 data_aux$Inflacion = log(1 + all_data$Inflacion)
 data_aux$Tasa_Intervencion = log(1 + all_data$Tasa_Intervencion)
+```
 
+```{r}
 empresas_train = c(800015615, 800045720,
                    800081030, 800112440,
                    800118660, 800157469,
@@ -361,6 +372,9 @@ empresas_test = c(830052054, 860030360,
                    900234565, 900389088,
                    900437650)
 
+```
+
+```{r}
 train = all_data$NIT%in%empresas_train
 test = all_data$NIT%in%empresas_test
 
@@ -383,6 +397,7 @@ data_test_z = data_test
 data_train_z$NIT = NIT_train
 data_test_z$NIT = NIT_test
 ```
+
 
 Definición de las funciones para calcular el R-squared y R-Squared Adjusted
 ```{r}
@@ -407,29 +422,29 @@ De los resultados anteriores, vemos que el modelo lineal general con mejor desem
 mod_lin = lm('Costo.de.ventas_dif~PIB', data = data_train_z)
 ```
 
+En este caso el modelo está siendo exclusivamente dependiente de la dinámica el PIB, y se tiene que un cambio en dicha medida tiene un impacto positivo de hasta 12.70% sobre la variación en los costos de venta, lo cual es razonable, en particular porque al percibir mayor crecimiento en la economía global la industria, naturalmente, también se ve afectada al haber mayor producción y un mayor retorno de dinero; no obstante, las dinámicas de las compañías que componen la industria muchas veces se ven influenciada por el factor macro más global de manera diferentes, ello por su tamaño o tendencias, así que probablemente sea necesario modelar dichos efectos de una forma más robusta.
+
 ```{r}
 summary(mod_lin)
 ```
-
-De este modelo entrenado, tenemos que un incremento en un 1% del PIB anual del país,  corresponde a un aumento del 11.47% anual en la diferencia de costos de venta de las empresas, analogamente al realizar la interpretación sobre la TRM, tenemos que un aumento en un 1% en la TRM anual, implica un aumento del 0.0767% en la diferencia de los costos de venta anuales de las empresas. De acá podemos ver que al utilzar este modelo, el PIB es el que nos presenta un mayor impacto para poder explicar los cambios relativos anuales en los costos de venta de las empresas en el sector de la construcción.
 
 #### Desempeño del Modelo Entrenado
 
 En el conjunto de entrenamiento:
 
-DEVOVLER LA TRANSFORMACION DEL LOGARITMO
-
 ```{r fig.align='center'}
 preds = predict(mod_lin)
 
-plot(preds, data_train_z$Costo.de.ventas_dif, xlab = 'Valor predicho', ylab = 'Valor Real', 
-     main='Modelo Lineal General')
+plot(lapply(preds, function(x) exp(x) - 1),  
+     lapply(data_train_z$Costo.de.ventas_dif, function(x) exp(x) - 1), 
+     xlab = 'Valor predicho', ylab = 'Valor real', main='Modelo Lineal General (a escala porcentual)')
 abline(a=0, b=1, lwd = 2, col = 'red')
 ```
 
-En el conjunto de Prueba
+Como puede apreciarse en la gráfica anterior el comportamiento de las estimaciones es relativamente estática y no logra distribuir los puntos de información de forma dinámica. En particular, es claro como se obtuvo una segmentación en tres partes, lo cual es razonable y va en línea con la idea de crecimiento, estancamiento y decaida de los costos de venta de las compañías de la industria, es decir, si bien los valores predichos se encuentran desvíados de los reales, el sólo PIB y la propia variación de los costos permiten identificar tendencias en la industria.
 
-DEVOLVER LA TRANSFORMACION DEL LOGARITMO
+La aplicación sobre el conjunto de prueba desplegado a continuación genera resultados muy similares a aquellos sobre el de entrenamiento. El ajuste es considerablemente bajo, lo cual es esperado, debido a la separación natural de las tendencias de las empresas y a la falta de la modelación del efecto del indicador sobre la medida de estudio.
+
 ```{r fig.align='center'}
 preds_test = predict(mod_lin, newdata = data_test_z)
 
@@ -440,8 +455,9 @@ sub_tit = paste("R2", format(r2_model, digits=2, nsmall=2),
                 "; R2_adj", format(adj_r2_model, digits=2, nsmall=2), 
                 sep = " ", collapse = NULL)
 
-plot(preds_test, data_test_z$Costo.de.ventas_dif, xlab = 'Valor predicho', ylab = 'Valor Real',
-     main='Modelo Lineal General', sub=sub_tit)
+plot(lapply(preds_test, function(x) exp(x) - 1), 
+     lapply(data_test_z$Costo.de.ventas_dif, function(x) exp(x) - 1), 
+     xlab = 'Valor predicho', ylab = 'Valor Real', main='Modelo Lineal General (a escala porcentual)', sub=sub_tit)
 abline(a=0, b=1, lwd = 2, col = 'red')
 ```
 
@@ -495,7 +511,9 @@ mod_me = lmer('Costo.de.ventas_dif~Desempleo+PIB+(0+Desempleo|NIT)+(PIB|NIT)', d
 summary(mod_me)
 ```
 
-Ahora considerando el modelo de efectos mixtos, observando primero la componente de los efectos fijos, vemos que un incremento en un 1% del PIB anual del pais, refleja un aumento en un 12.63% en la diferencia de los costos de venta anuales de las empresas, mientras que al ver un cambio de un 1% en el desempleo, este disminuye la diferencia de los costos en un 1.2765%, ahora bien, considerando los efectos aleatorios, los cuales tendrán un efecto sobre la predicción en aquellas empresas que fueron consideradas en el entrenamiento (mirando al NIT), vemos que adicional a la componente fija, el cambio de 1% del PIB anual, que antes tenia un efecto en el aumento del 12.63% sobre la diferencia de los costos de venta, ahora se aumenta  en un 0.56% adicional, es decir, para aquellas empresas que haya visto el modelo previamente, el aumento anual en los costos de venta corresponderá a un 13.198%. Ahora realizando el análisis de los efectos aleatorios para el desempleo, vemos que el desempleo tiene un incremento del 3.576% en la diferencia de los costos de venta anual por un aumento del 1% en el desempleo, por lo que para aquellas empresas consideradas al momento de entrenar el modelo, presentarán un aumento del 2.299669% en la diferencia de costos anuales por un cambio de un 1% en el desempleo, por lo que estas empresas pueden tener caracteristicas que evitan que el desempleo no tenga un imacto muy grande en sus costos.
+Ahora, considerando el modelo de efectos mixtos, observando primero la componente de los efectos fijos, vemos que un incremento en un 1% del PIB anual del pais, refleja un aumento en un 12.63% en la diferencia de los costos de venta anuales de las empresas, mientras que al ver un cambio de un 1% en el desempleo, este disminuye la diferencia de los costos en un 1.2765%. Dichos resultados son completamente razonables en la realidad por el argumento previamente expuesto sobre el efecto del crecimiento del PIB en la variación de los costos al presentarse mayor producción que genera incrementos en los retornos de dinero, por otro lado, una variación negativa sobre el desempleo combinado con el PIB claramente afecta la industria al presentarse una mano de obra más barata lo que reduce los gastos y de forma indirecto los costos. Aquí es importante notar como la tasa de crecimiento potencial asociada al crecimiento de productividad debe, en teoría, mantenerse en línea con una reducción con la tasa de desempleo.
+
+Ahora bien, considerando los efectos aleatorios, los cuales tendrán un efecto sobre la estimación en aquellas empresas que fueron consideradas en el entrenamiento (mirando al NIT), vemos que adicional a la componente fija, el cambio de 1% del PIB anual, que antes tenia un efecto en el aumento del 12.63% sobre la diferencia de los costos de venta, ahora se aumenta  en un 0.56% adicional, es decir, para aquellas empresas que haya visto el modelo previamente, el aumento anual en los costos de venta corresponderá a un 13.198%. Ahora realizando el análisis de los efectos aleatorios para el desempleo, vemos que el desempleo tiene un incremento del 3.576% en la diferencia de los costos de venta anual por un aumento del 1% en el desempleo, por lo que para aquellas empresas consideradas al momento de entrenar el modelo, presentarán un aumento del 2.299669% en la diferencia de costos anuales por un cambio de un 1% en el desempleo, por lo que estas empresas pueden tener caracteristicas que evitan que el desempleo no tenga un imacto muy grande en sus costos, lo cual, una vez más, refleja la realidad de la industria de la construcción donde se presentan actores de magnitudes muy diferentes que pueden mitigar el efecto macro al poder mantener niveles de producción altos que les permita seguir generando imgresos sin tener que afectar a su capital humano.
 
 
 ```{r fig.align='center'}
@@ -503,15 +521,14 @@ par(mfrow=c(3,2))
 plot(mod_me, which = c(1:6))
 ```
 
-DEVOLVER TRANSFORMACIONES DEL LOGARITMO
-
 ```{r fig.align='center'}
 preds = predict(mod_me)
-plot(preds,data_train_z$Costo.de.ventas_dif, main='Modelo de Efectos Mixtos')
+plot(lapply(preds, function(x) exp(x) - 1),
+     lapply(data_train_z$Costo.de.ventas_dif, function(x) exp(x) - 1), 
+     main='Modelo de Efectos Mixtos (a escala porcentual)', xlab = 'Valor predicho', ylab = 'Valor Real')
 abline(a=0, b=1, lwd = 2, col = 'red')
 ```
 
-DEVOLVER TRANSFORMACIONES DEL LOGARITMO
 ```{r fig.align='center'}
 preds = predict(mod_me, newdata = data_test_z,allow.new.levels=TRUE)
 
@@ -522,7 +539,9 @@ sub_tit = paste("R2", format(r2_model, digits=2, nsmall=2),
                 "; R2_adj", format(adj_r2_model, digits=2, nsmall=2), 
                 sep = " ", collapse = NULL)
 
-plot(preds,data_test_z$Costo.de.ventas_dif, main='Modelo de Efectos Mixtos', sub=sub_tit)
+plot(lapply(preds, function(x) exp(x) - 1),
+     lapply(data_test_z$Costo.de.ventas_dif, function(x) exp(x) - 1),
+     main='Modelo de Efectos Mixtos (a escala porcentual)', xlab = 'Valor predicho', ylab = 'Valor Real', sub=sub_tit)
 abline(a=0, b=1, lwd = 2, col = 'red')
 ```
 
