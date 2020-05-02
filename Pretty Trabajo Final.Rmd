@@ -55,42 +55,6 @@ nacional. Un punto importante es que algunas compañías del sector podrán segu
 Frente a la incertidumbre que generan estos escenarios y como la dinámica particular de cada compañía que aporta al crecimiento de la industria total evoluciona en el tiempo se torna relevante construir análisis y modelos estadísticos robustos que respondan a las perturbaciones en el mercado y permitan obtener información
 valiosa para la toma de decisiones.
 
-
-## Consolidación de los datos (variables de salida y explicativas)
-
-NOTA: toda esta parte inicial de preparación y consolidación de los datos se hizo en Python. Los programas para realizarla se encuentran en el repositorio. Este script de R toma solo el dataset final que fue resultado de toda la consolidación y preprocesamiento.
-
-Los datos que de la variable de respuesta (costos y gastos de ventas de algunas empresas para los años 2016 a 2018) se extrajeron de: http://pie.supersociedades.gov.co.
-
-Se conservaron solo las empresas cuya clasificación industrial uniforme internacional tenga la palabra “construcción” en ella y cuyos NIT estuvieran incluidos en el archivo de empresas de 2018. Luego de aplicar este filtro, se eliminaron también todas aquellas empresas que en algún año entre 2015 y 2018 tuvieran algún valor vacío (NaN) ya sea en sus costos de venta o en sus gastos de venta, dejando en total 33 empresas distintas en el dataset. A pesar de que solo se analizan en este reporte los años 2016 a 2018, fue necesario también descargar 2015 para poder calcular la variable en diferencias para 2016. Para calcular las variables de costos y gastos de ventas en diferencia porcentual, se usó su variación porcentual entre un año y otro, la cual se calculo con esta fórmula:
-
-Costo_de_ventas_dif(t) = (Costo_de_ventas(t) – Costo_de_ventas(t-1))/Costo_de_ventas(t)
-
-Donde t era el año. Así, se obtuvieron Costos_de_ventas_dif para los años 2016, 2017 y 2018.
-
-NOTA: A pesar de que en este trabajo los modelos que usamos son solo para el costo de ventas, aplicamos la misma transformación para el gasto de ventas para los análisis descriptivos.
-
-Los valores para las variables macroeconómicas (variables explicativas) se extrajeron del Banco de la República y de la DANE. Se descargaron archivos de Excel para cada una de las variables macro. 
-Algunas de estas variables macro ya venían como variación porcentual entre un año y el otro. Sin embargo, otras no venían de esta manera. A continuación, detallamos la forma final en la que quedaría cada una de las variables (luego de nuestro preprocesamiento interno en scripts de Python).
-
-PIB: variación porcentual del PIB total entre un año y otro
-
-TRM: variación porcentual de la TRM promedio entre un año y otro
-
-Balance en Cuenta Corriente: variación porcentual del balance de cuenta corriente entre un año y otro
-
-Balance Fiscal: variación porcentual del balance fiscal entre un año y otro 
-
-Tasa de Intervención: tasa de intervención promedio del año (como ya era porcentaje, se prefirió no usar variación)
-
-Desempleo: tasa de desempleo promedio durante el año (como ya era porcentaje, se prefirió no usar variación)
-
-Inflación: tasa de inflación anual
-
-Nota: se menciona que, ya posteriormente en este reporte de R, se aplica una transformación de log(1+X) para todas las variables (tanto para las de salida como para las de entrada). Esto es para poder aportarle interpretabilidad a los modelos de regresión (los coeficientes de las regresiones representarán los cambios porcentuales en la variable de salida que se tendrán al cambiar en porcentaje las variables explicativas).
-
-
-
 ## Lectura de los datos
 
 ```{r}
@@ -439,7 +403,6 @@ Definición de las funciones para calcular el R-squared y R-Squared Adjusted
 ```{r}
 r2_score <- function(x, y) summary(lm(y~x))$r.squared
 adj_r2_score <- function(x, y) summary(lm(y~x))$adj.r.squared
-mse_score <- function(x, y) mean((x - y)^2)
 ```
 
 ## Modelo para los Costos
@@ -498,9 +461,9 @@ kable(measures)%>%
 ```
 
 
-Como puede apreciarse en la gráfica anterior el comportamiento de las estimaciones es relativamente estática y no logra distribuir los puntos de información de forma dinámica. En particular, es claro como se obtuvo una segmentación en tres partes, lo cual es razonable y va en línea con la idea de crecimiento, estancamiento y decaida de los costos de venta de las compañías de la industria, es decir, si bien los valores predichos se encuentran desvíados de los reales, el sólo PIB y la propia variación de los costos permiten identificar tendencias en la industria.
+Como puede apreciarse en la gráfica anterior el comportamiento de las estimaciones es relativamente estática y no logra distribuir los puntos de información de forma dinámica. En particular, es claro como se obtuvo una segmentación en tres partes, lo cual es razonable y va en línea con la idea de crecimiento, estancamiento y decaida de los costos de venta de las compañías de la industria, es decir, si bien los valores predichos se encuentran desvíados de los reales, el sólo PIB y la propia variación de los costos permiten identificar tendencias en la industria. Los resultados generan variaciones estimadas desde -0.15% hasta -0.06%, lo que genera un intervalo razonable teniendo en cuenta la media (-0.03%) y desviación estandar (0.27%) de la variable de estudio. 
 
-La aplicación sobre el conjunto de prueba desplegado a continuación genera resultados muy similares a aquellos sobre el de entrenamiento. El ajuste es considerablemente bajo, lo cual es esperado, debido a la separación natural de las tendencias de las empresas y a la falta de la modelación del efecto del indicador sobre la medida de estudio.
+La aplicación sobre el conjunto de prueba desplegado a continuación genera resultados muy similares a aquellos sobre el de entrenamiento. El ajuste es considerablemente bajo, lo cual es esperado, debido a la separación natural de las tendencias de las empresas y a la falta de la modelación del efecto del indicador sobre la medida de estudio; no obstante, el modelo entrega valores que se mantienen en un rango conservador, es decir, no genera estimaciones imposibles que efectivamente pudieran alcanzarse bajo reducciones en las cuentas de costos de ventas.
 
 ```{r fig.align='center'}
 preds_test = predict(mod_lin, newdata = data_test_z)
@@ -511,7 +474,6 @@ mse_model<-mean((data_test_z$Costo.de.ventas_dif - preds_test)^2)
 
 sub_tit = paste("R2", format(r2_model, digits=2, nsmall=2), 
                 "; R2_adj", format(adj_r2_model, digits=2, nsmall=2), 
-                "; MSE", format(mse_model, digits=2, nsmall=2), 
                 sep = " ", collapse = NULL)
 
 plot(lapply(preds_test, function(x) exp(x) - 1), 
@@ -541,6 +503,21 @@ mod_plot = plot(mod_lin, which = c(1:6))
 
 De los gráficos anteriores, en particular analizando el valor de la distancia de Cook para las observaciones, notamos que las observaciones 17, 30, 52 son candidatas a ser registros atípicos en el conjunto de datos, por lo que entrenaremos un nuevo modelo eliminando estos registros. Notar que los outliers corresponden a la empresa con NIT 890909034 para el 2016, y para la empresa 800236890 en los periodos del 2017 y 2018, información que se contrasta con los outliers obtenidos en el boxplot, lo cual están incluidos tanto mirando la variable de diferencia costos de venta.En vista de su comportamiento raro en magnitud según el boxplot, no es de extrañarse que estos registros hayan sido aquellos con la distancia de cook mas grande. Procederemos a entrenar un modelo removiendo estos registros
 
+```{r}
+### Vector para eliminar registros atipicos según la información obtenida por la distancia de cook
+outliers = c(17, 30, 52)
+data_train_z_noOut = data_train_z[-outliers,]
+```
+
+```{r fig.align='center'}
+h_ii<-hatvalues(mod_lin)
+plot(hatvalues(mod_lin),las=1,xlab="i",ylab="hii",main="Influencia (h_ii)",type="h")
+```
+### Inflacion de la varianza
+
+```{r}
+#vif(mod_lin)
+```
 
 ## Modelos Lineales Generalizados (GLM)
 
@@ -570,6 +547,10 @@ Ahora, considerando el modelo de efectos mixtos, observando primero la component
 Ahora bien, considerando los efectos aleatorios, los cuales tendrán un efecto sobre la estimación en aquellas empresas que fueron consideradas en el entrenamiento (mirando al NIT), vemos que adicional a la componente fija, el cambio de 1% del PIB anual, que antes tenia un efecto en el aumento del 12.63% sobre la diferencia de los costos de venta, ahora se aumenta  en un 0.56% adicional, es decir, para aquellas empresas que haya visto el modelo previamente, el aumento anual en los costos de venta corresponderá a un 13.198%. Ahora realizando el análisis de los efectos aleatorios para el desempleo, vemos que el desempleo tiene un incremento del 3.576% en la diferencia de los costos de venta anual por un aumento del 1% en el desempleo, por lo que para aquellas empresas consideradas al momento de entrenar el modelo, presentarán un aumento del 2.299669% en la diferencia de costos anuales por un cambio de un 1% en el desempleo, por lo que estas empresas pueden tener caracteristicas que evitan que el desempleo no tenga un imacto muy grande en sus costos, lo cual, una vez más, refleja la realidad de la industria de la construcción donde se presentan actores de magnitudes muy diferentes que pueden mitigar el efecto macro al poder mantener niveles de producción altos que les permita seguir generando imgresos sin tener que afectar a su capital humano.
 
 
+```{r fig.align='center'}
+par(mfrow=c(3,2))
+plot(mod_me, which = c(1:6))
+```
 
 En el conjunto de entrenamiento se tiene
 
@@ -612,7 +593,6 @@ mse_model<-mean((data_test_z$Costo.de.ventas_dif - preds)^2)
 
 sub_tit = paste("R2", format(r2_model, digits=2, nsmall=2), 
                 "; R2_adj", format(adj_r2_model, digits=2, nsmall=2), 
-                "; MSE", format(mse_model, digits=2, nsmall=2), 
                 sep = " ", collapse = NULL)
 
 plot(lapply(preds, function(x) exp(x) - 1),
@@ -631,13 +611,11 @@ kable(measures)%>%
   column_spec(1,bold=T)
 ```
 
-Desafortunadamente en el caso de prueba no se logra distinguir la tendencia natural en el comportamiento de la diferencia de los costos de venta y la escala se encuentra muy distante entre los valores predichos y los reales, como se espera desde el gráfico anterior. En esta evaluación los valores predichos se ponderan para generar una tendencia casi constante y la razonabilidad una vez más se pone en duda, aunque no por completo, dado que éstos valores efectivamente pueden ser alcanzados con condiciones ligeramente diferentes.
+Desafortunadamente en el caso de prueba no se logra distinguir la tendencia natural en el comportamiento de la diferencia de los costos de venta y la escala se encuentra muy distante entre los valores predichos y los reales, como se espera desde el gráfico anterior. En esta evaluación los valores predichos se ponderan para generar una tendencia casi constante y la razonabilidad se pone en duda, aunque no por completo, dado que éstos valores efectivamente pueden ser alcanzados con condiciones ligeramente diferentes.
  
  
  
 ### Superficie poblacional del modelo
-
-Miraremos la superficie poblacional del modelo, es decir, como cambia el valor predicho de una solución general desconcodia de la población (para la cual solo se le aplicarían los efectos fijos, y no los aleatorios) al variar los valores de las dos variables explicativas que inciden sobre ella (desempleo y PIB). Recordar que todas las variables en estos gráficos tienen ya la transformación del logaritmo antes explicada.
 
 ```{r}
 
@@ -651,15 +629,8 @@ data_surface$NIT = 1000
 z = predict(mod_me, newdata = data_surface,allow.new.levels=TRUE)
 z = matrix(z, nrow = 50, ncol = 50)
 
-
-custom_txt <- paste0("Desempleo: ", data_surface$Desempleo,
-                    "\nPIB: ", data_surface$PIB, # correct break syntax
-                    "\nCosto_de_ventas_dif: ", z) %>%
-    matrix(50,50) # dim must match plotly's under-the-hood? matrix 
-
-
 ### Toca rotar la figura para poder ver el plano
-fig <- plot_ly(x = PIB, y = Desempleo, z = z,    text = custom_txt,      hoverinfo = "text") %>% add_surface(colorbar=list(title='Poblacional'))%>%layout(scene = list(xaxis = list(title = 'PIB'), yaxis = list(title = 'Desempleo'),zaxis = list(title = 'Costo_de_ventas_dif')))
+fig <- plot_ly(x = PIB, y = Desempleo, z = z) %>% add_surface()
 fig
 
 ```
@@ -667,7 +638,7 @@ fig
 
 ### Superficie del modelo para un individuo conocido
 
-Para visualizar el funcionamiento del modelo de efectos mixtos, además de graficar la superficie poblacional general, graficaremos también la superficie de un par de invidiuos ya conocidos por el modelo. En este caso, como los individuos fueron usados por el modelo de efectos mixtos al entrenarse, se les aplica a dichos individuos un efecto aleatorio propio a cada uno de ellos (además del efecto fijo general que se aplica de la misma forma para todos). Por esta razón, veremos que las superficies de estos dos individuos son distintas entre sí y ademas son distintas de la superficie poblacional general.
+AGREGAR OTRO INDIVIDUO A LA SUPERFICIE
 
 ```{r}
 
@@ -682,12 +653,14 @@ z2 = predict(mod_me, newdata = data_surface)
 z2 = matrix(z2, nrow = 50, ncol = 50)
 
 ### Toca rotar la figura para poder ver el plano
-data_surface$NIT = empresas_train[3]
+fig %>% add_surface(z = ~z2, opacity = 0.98,colorscale = list(c(0,2),c("rgb(255,112,184)","rgb(120,0,64)"))) %>% layout(title="Poblacional (azul y verde) vs Un Individuo (Rosa)")
+data_surface$NIT = empresas_train[20]
 z3 = predict(mod_me, newdata = data_surface)
 z3 = matrix(z3, nrow = 50, ncol = 50)
 
+### Toca rotar la figura para poder ver el plano
+fig %>% add_surface(z = ~z3, opacity = 0.98,colorscale = list(c(0,2),c("rgb(255,112,184)","rgb(220,100,164)"))) %>% layout(title="Poblacional (azul y verde) vs Un Individuo (Rosa)")
 
-fig %>% add_surface(z = ~z2, opacity = 0.98,colorscale = list(c(0,1),c("rgb(255,112,184)","rgb(120,0,64)")),colorbar=list(title=paste('NIT ', empresas_train[1]))) %>% add_surface(z = ~z3, opacity = 0.94,colorscale = list(c(0,1),c("rgb(0,0,0)","rgb(200,200,200)")),     colorbar=list( title=paste('NIT ', empresas_train[1]))) %>% layout(title="Poblacional (azul y verde) vs dos Individuos (uno rosa y uno negro)")
 
 ```
  
