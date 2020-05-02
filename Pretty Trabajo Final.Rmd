@@ -639,6 +639,20 @@ plot(lapply(preds, function(x) exp(x) - 1),
 abline(a=0, b=1, lwd = 2, col = 'red')
 ```
 
+Bajo esta aplicación de efectos mixtos es claro como se presenta una mejor distribución 
+de los valores predichos contra los reales y éste es un comportamiento más natural y 
+razonable en la industria en comparación al obtenido con el lineal generalizado, 
+donde si bien hay unas compañías que se alejan del común respecto a las diferencias en los costos de venta, 
+el resto permanece en escalas de entre -0.2% y 0.1% con una variedad muy interesante ya que
+evidencia el efecto distribuido tanto del PIB como del desempleo en las variaciones
+de los costos de ventas en una serie de compañías que seguramente permanecen estables
+en el mercado. Respecto a las compañías que se hayan por fuera del intervalo se tienen
+dos clases, por un lado aquellos cuyos valores reales son menores
+a cero son compañías cuyo concepto de costos de ventas disminuyeron más de lo normal en el
+período actual, y por otro lado (bajo la selección de compañías en entrenamiento)
+donde los valores reales fueron considerablemente superiores a los estimados, lo que
+refleja compañías cuyos costos de venta superaron la expectativa en el período actual.
+
 ```{r echo=FALSE}
 Medidas = c("r2 train", "r2 adj train", "mse train") 
 Resultados = c(r2_model, adj_r2_model, mse_model) 
