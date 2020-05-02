@@ -22,7 +22,6 @@ library(corrplot)
 library(mvtnorm)
 library(ggplot2)
 library(gridExtra)
-library(formattable)
 library(kableExtra)
 library(dplyr)
 library(lme4)
@@ -31,8 +30,10 @@ library(glmmLasso)
 library(influence.ME)
 library(EnvStats)
 library(plotly)
+library(olsrr)
 ```
 
+### Repositorio
 
 ## Introduccion
 
@@ -64,21 +65,9 @@ data = all_data[,-c(1,2)]
 ## Análisis descriptivo
 Damos una visualizacion inicial al conjunto de datos con el que se va a trabajar:
 
-```{r echo=FALSE}
-ref_ds=head(round(data,2))
-
-ref_ds$Costo.de.ventas <- currency(ref_ds$Costo.de.ventas, digits = 0L)
-ref_ds$Gastos.de.ventas	 <- currency(ref_ds$Gastos.de.ventas, digits = 0L)
-ref_ds$TRM<- percent(ref_ds$TRM, format = "d", digits = 2L)
-ref_ds$PIB<- percent(ref_ds$PIB, format = "d", digits = 2L)
-ref_ds$Desempleo<- percent(ref_ds$Desempleo, format = "d", digits = 2L)
-ref_ds$Inflacion<- percent(ref_ds$Inflacion, format = "d", digits = 2L)
-ref_ds$Tasa_Intervencion<- percent(ref_ds$Tasa_Intervencion, format = "d", digits = 2L)
-ref_ds$Balance_CC<- percent(ref_ds$Balance_CC, format = "d", digits = 2L)
-ref_ds$Balance_Fiscal<- percent(ref_ds$Balance_Fiscal, format = "d", digits = 2L)
-
-kable(ref_ds) %>%
-  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T, font_size = 12)%>%
+```{r}
+kable(head(round(data,2))) %>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
   scroll_box("100%", height = "300px")
 ```
 
@@ -87,7 +76,7 @@ En la siguiente tabla, vemos información descriptiva de las variables que se co
 ```{r}
 summary_df = stat.desc(data)
 kable(summary_df) %>%
-  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T, font_size = 12)%>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
   scroll_box("100%", height = "300px")
 
 ```
@@ -132,7 +121,7 @@ kable(
   caption = 'Media y Mediana',
   booktabs = TRUE, valign = 't'
 ) %>%
-  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T, font_size = 15)
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)
 ```
 ### Análisis desde variables absolutas
 #### Boxplot
@@ -209,8 +198,8 @@ Asi, estos cambios en las industrias en sus costos y gastos de ventas, pueden es
 #### Matriz de Covarianzas
 ```{r}
 cov_data = cov(data)
-kable(formatC(cov_data,format = "e", digits = 4)) %>%
-  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T, font_size = 12)%>%
+kable(formatC(cov_data,format = "e", digits = 2)) %>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
   scroll_box("100%", height = "480px")
 ```
 
@@ -218,7 +207,7 @@ kable(formatC(cov_data,format = "e", digits = 4)) %>%
 ```{r}
 cor_data = cor(data)
 kable(round(cor_data,2)) %>%
-  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T, font_size = 12)%>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
   scroll_box("100%", height = "480px")
 
 ```
@@ -323,6 +312,14 @@ p4 = grafica(data, "Costo.de.ventas_dif" , "Gastos.de.ventas_dif")
 
 ## Creacion de modelos
 
+Para la variable costos de venta, adicional a la transformación que se realizó para obtener la diferencia relativa entre los periodos, en la etapa de modeloamiento, consideraremos para la variable salida la siguiente transformacion:
+
+Ec2 log(1+diff)
+
+Adicionalmente, a los predictores se les realizó la misma transformación.
+
+Agregar un comentario sobre la eleccion de las empresas para train y para test ### Pablo
+
 ```{r}
 data_aux = select(all_data,select = -starts_with('NIT'))
 data_aux = select(data_aux,select = -starts_with('Year'))
@@ -344,19 +341,6 @@ data_aux$Balance_CC = log(1 + all_data$Balance_CC)
 data_aux$Balance_Fiscal = log(1 + all_data$Balance_Fiscal)
 data_aux$Inflacion = log(1 + all_data$Inflacion)
 data_aux$Tasa_Intervencion = log(1 + all_data$Tasa_Intervencion)
-
-### Transformacion 2: log(costos sobre gastos)
-#data_aux$Costo.de.ventas_dif = log(all_data$Costo.de.ventas/all_data$Gastos.de.ventas)
-
-### Transformacion 3: differencia porcentual de costos
-#data_aux$Costo.de.ventas_dif = all_data$Costo.de.ventas_dif
-
-### Transformacion boxcox: Realiza una transformacion para obtener un comportamiento
-### de la distribucion normal de la variable
-
-#bx = boxcox(all_data$Costo.de.ventas,objective.name = "Log-Likelihood", optimize = TRUE)
-#lambda = bx$lambda
-#data_aux$Costo.de.ventas_dif = (data_aux$Costo.de.ventas^lambda - 1)/lambda
 
 empresas_train = c(800015615, 800045720,
                    800081030, 800112440,
@@ -385,7 +369,7 @@ NIT_test = NIT[test,]
 
 data_train = data_aux[train,]
 rownames(data_train) <- NULL
-data_train_z = data_train#scale(data_train, center = TRUE, scale = TRUE)
+data_train_z = data_train
 
 media_tr = attr(data_train_z, 'scaled:center')
 stdev_tr = attr(data_train_z, 'scaled:scale')
@@ -394,12 +378,13 @@ data_train_z = as.data.frame(data_train_z)
 
 data_test = data_aux[test,]
 rownames(data_test) <- NULL
-data_test_z = data_test#as.data.frame(scale(data_test,  center = media_tr, scale = stdev_tr))
+data_test_z = data_test
 
 data_train_z$NIT = NIT_train
 data_test_z$NIT = NIT_test
 ```
 
+Definición de las funciones para calcular el R-squared y R-Squared Adjusted
 ```{r}
 r2_score <- function(x, y) summary(lm(y~x))$r.squared
 adj_r2_score <- function(x, y) summary(lm(y~x))$adj.r.squared
@@ -410,42 +395,46 @@ adj_r2_score <- function(x, y) summary(lm(y~x))$adj.r.squared
 ### Modelo Lineal General
 
 ```{r}
-mod_lin = lm('Costo.de.ventas_dif~PIB+TRM+Desempleo+Inflacion+Tasa_Intervencion+Balance_CC+Balance_Fiscal', data = data_train_z)
+step.model <- ols_step_both_p(lm('Costo.de.ventas_dif~PIB+TRM+Desempleo+Inflacion+Tasa_Intervencion+Balance_CC+Balance_Fiscal', data = data_train_z), pent = 0.1, prem = 0.1, details = TRUE)
+
+summary(step.model)
+```
+
+
+De los resultados anteriores, vemos que el modelo lineal general con mejor desempeño es aquel que solo considera el PIB además de un intercepto. Pues vemos que en particular para el PIB, su error estandar se reduce considerablemente (un poco más de la mitad), además que vemos mejores valores al R-Squared Adjusted. Por lo tanto, procedemos a mirar el desempeño de un modelo entrenado considerando unicamente el PIB. ### ARREGLAR
+
+```{r}
+mod_lin = lm('Costo.de.ventas_dif~PIB', data = data_train_z)
 ```
 
 ```{r}
 summary(mod_lin)
 ```
 
+De este modelo entrenado, tenemos que un incremento en un 1% del PIB anual del país,  corresponde a un aumento del 11.47% anual en la diferencia de costos de venta de las empresas, analogamente al realizar la interpretación sobre la TRM, tenemos que un aumento en un 1% en la TRM anual, implica un aumento del 0.0767% en la diferencia de los costos de venta anuales de las empresas. De acá podemos ver que al utilzar este modelo, el PIB es el que nos presenta un mayor impacto para poder explicar los cambios relativos anuales en los costos de venta de las empresas en el sector de la construcción.
+
 #### Desempeño del Modelo Entrenado
 
 En el conjunto de entrenamiento:
+
+DEVOVLER LA TRANSFORMACION DEL LOGARITMO
+
 ```{r fig.align='center'}
 preds = predict(mod_lin)
 
-plot(preds, data_train_z$Costo.de.ventas_dif, xlab = 'Valor predicho', ylab = 'Valor Real', main='Modelo Lineal General')
+plot(preds, data_train_z$Costo.de.ventas_dif, xlab = 'Valor predicho', ylab = 'Valor Real', 
+     main='Modelo Lineal General')
 abline(a=0, b=1, lwd = 2, col = 'red')
 ```
-```{r echo = FALSE}
-Medidas = c("r2 train", "r2 adj train", "mse train") 
-Resultados = c(r2_score(preds, data_train_z$Costo.de.ventas_dif), adj_r2_score(preds, data_train_z$Costo.de.ventas_dif), mean((data_train_z$Costo.de.ventas_dif - preds)^2)) 
-
-measures = data.frame(Medidas, Resultados)
-
-kable(measures)%>%
-  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
-  column_spec(1,bold=T)
-```
-
-
 
 En el conjunto de Prueba
+
+DEVOLVER LA TRANSFORMACION DEL LOGARITMO
 ```{r fig.align='center'}
 preds_test = predict(mod_lin, newdata = data_test_z)
 
 r2_model<-r2_score(preds_test, data_test_z$Costo.de.ventas_dif)
 adj_r2_model<-adj_r2_score(preds_test, data_test_z$Costo.de.ventas_dif)
-mse_model<-mean((data_test_z$Costo.de.ventas_dif - preds_test)^2)
 
 sub_tit = paste("R2", format(r2_model, digits=2, nsmall=2), 
                 "; R2_adj", format(adj_r2_model, digits=2, nsmall=2), 
@@ -456,18 +445,6 @@ plot(preds_test, data_test_z$Costo.de.ventas_dif, xlab = 'Valor predicho', ylab 
 abline(a=0, b=1, lwd = 2, col = 'red')
 ```
 
-```{r echo = FALSE}
-Medidas = c("r2 test", "r2 adj test", "mse test") 
-Resultados = c(r2_model,adj_r2_model,mse_model)
-
-measures = data.frame(Medidas, Resultados)
-
-kable(measures)%>%
-  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
-  column_spec(1,bold=T)
-```
-
-
 ### Graficos de Evaluacion de modelos
 
 ```{r fig.align='center'}
@@ -475,7 +452,7 @@ par(mfrow=c(3,2))
 mod_plot = plot(mod_lin, which = c(1:6))
 ```
 
-, 
+
 
 De los gráficos anteriores, en particular analizando el valor de la distancia de Cook para las observaciones, notamos que las observaciones 17, 30, 52 son candidatas a ser registros atípicos en el conjunto de datos, por lo que entrenaremos un nuevo modelo eliminando estos registros. Notar que los outliers corresponden a la empresa con NIT 890909034 para el 2016, y para la empresa 800236890 en los periodos del 2017 y 2018, información que se contrasta con los outliers obtenidos en el boxplot, lo cual están incluidos tanto mirando la variable de diferencia costos de venta.En vista de su comportamiento raro en magnitud según el boxplot, no es de extrañarse que estos registros hayan sido aquellos con la distancia de cook mas grande. Procederemos a entrenar un modelo removiendo estos registros
 
@@ -493,100 +470,6 @@ plot(hatvalues(mod_lin),las=1,xlab="i",ylab="hii",main="Influencia (h_ii)",type=
 
 ```{r}
 #vif(mod_lin)
-```
-
-## Entrenamiento del modelo sin Outliers
-
-```{r}
-mod_lin02 = lm('Costo.de.ventas_dif~PIB+TRM+Desempleo+Inflacion+Tasa_Intervencion+Balance_CC+Balance_Fiscal', data = data_train_z_noOut)
-```
-
-```{r}
-summary(mod_lin02)
-```
-
-#### Desempeno del Modelo Entrenado sin Outliers
-
-En el conjunto de entrenamiento:
-```{r fig.align='center'}
-preds = predict(mod_lin02)
-
-plot(preds, data_train_z_noOut$Costo.de.ventas_dif, xlab = 'Valor predicho', ylab = 'Valor Real')
-abline(a=0, b=1, lwd = 2, col = 'red')
-```
-
-```{r echo = FALSE}
-Medidas = c("r2 train", "r2 adj train", "mse train") 
-Resultados = c(r2_score(preds, data_train_z_noOut$Costo.de.ventas_dif), adj_r2_score(preds, data_train_z_noOut$Costo.de.ventas_dif), mean((data_train_z_noOut$Costo.de.ventas_dif - preds)^2)) 
-
-measures = data.frame(Medidas, Resultados)
-
-kable(measures)%>%
-  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
-  column_spec(1,bold=T)
-```
-
-En el conjunto de Prueba
-```{r fig.align='center'}
-preds_test = predict(mod_lin02, newdata = data_test_z)
-
-r2_model<-r2_score(preds_test, data_test_z$Costo.de.ventas_dif)
-adj_r2_model<-adj_r2_score(preds_test, data_test_z$Costo.de.ventas_dif)
-mse_model<-mean((data_test_z$Costo.de.ventas_dif - preds_test)^2)
-
-sub_tit = paste("R2", format(r2_model, digits=2, nsmall=2), 
-                "; R2_adj", format(adj_r2_model, digits=2, nsmall=2), 
-                sep = " ", collapse = NULL)
-
-plot(preds_test, data_test_z$Costo.de.ventas_dif, xlab = 'Valor predicho', ylab = 'Valor Real',
-     main='Modelo Lineal General', sub=sub_tit)
-abline(a=0, b=1, lwd = 2, col = 'red')
-```
-
-```{r echo = FALSE}
-Medidas = c("r2 test", "r2 adj test", "mse test") 
-Resultados = c(r2_model,adj_r2_model,mse_model)
-
-measures = data.frame(Medidas, Resultados)
-
-kable(measures)%>%
-  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
-  column_spec(1,bold=T)
-```
-
-## Graficos de Evaluacion de modelos entrenando sin Outliers
-
-```{r fig.align='center'}
-par(mfrow=c(3,2))
-mod_plot = plot(mod_lin02, which = c(1:6))
-```
-
-Al observar el desempeño del modelo sin considerar dichos registros raros, no se tiene una mejora significativa en el modelo.
-
-### Modelo Lineal con Regularizacion
-
-Vamos a encontrar el parametro de regulairzacion
-```{r}
-library(glmnet)
-
-f1 = formula('Costo.de.ventas_dif~-1+PIB+TRM+Desempleo+Inflacion+Tasa_Intervencion+Balance_CC+Balance_Fiscal')
-
-
-X = model.matrix(f1, data = as.data.frame(data_train_z))
-Y = data_train_z$Costo.de.ventas_dif
-
-lambda_grid = 10^seq(10,-2,length.out = 100)
-modelo_regularizacion = cv.glmnet(x = X, y = Y, lambda = lambda_grid)
-```
-
-```{r fig.align='center'}
-plot(modelo_regularizacion) 
-```
-
-Entrenamos el modelo agregando el parametro de regularizacion, y asi ver relevancia de variables
-```{r}
-mod_lin_reg = glmnet(x = X, y = Y, lambda = 0.05, alpha = 1, intercept = FALSE)
-coef(mod_lin_reg)
 ```
 
 ## Modelos Lineales Generalizados (GLM)
@@ -612,10 +495,15 @@ mod_me = lmer('Costo.de.ventas_dif~Desempleo+PIB+(0+Desempleo|NIT)+(PIB|NIT)', d
 summary(mod_me)
 ```
 
+Ahora considerando el modelo de efectos mixtos, observando primero la componente de los efectos fijos, vemos que un incremento en un 1% del PIB anual del pais, refleja un aumento en un 12.63% en la diferencia de los costos de venta anuales de las empresas, mientras que al ver un cambio de un 1% en el desempleo, este disminuye la diferencia de los costos en un 1.2765%, ahora bien, considerando los efectos aleatorios, los cuales tendrán un efecto sobre la predicción en aquellas empresas que fueron consideradas en el entrenamiento (mirando al NIT), vemos que adicional a la componente fija, el cambio de 1% del PIB anual, que antes tenia un efecto en el aumento del 12.63% sobre la diferencia de los costos de venta, ahora se aumenta  en un 0.56% adicional, es decir, para aquellas empresas que haya visto el modelo previamente, el aumento anual en los costos de venta corresponderá a un 13.198%. Ahora realizando el análisis de los efectos aleatorios para el desempleo, vemos que el desempleo tiene un incremento del 3.576% en la diferencia de los costos de venta anual por un aumento del 1% en el desempleo, por lo que para aquellas empresas consideradas al momento de entrenar el modelo, presentarán un aumento del 2.299669% en la diferencia de costos anuales por un cambio de un 1% en el desempleo, por lo que estas empresas pueden tener caracteristicas que evitan que el desempleo no tenga un imacto muy grande en sus costos.
+
+
 ```{r fig.align='center'}
 par(mfrow=c(3,2))
 plot(mod_me, which = c(1:6))
 ```
+
+DEVOLVER TRANSFORMACIONES DEL LOGARITMO
 
 ```{r fig.align='center'}
 preds = predict(mod_me)
@@ -623,23 +511,12 @@ plot(preds,data_train_z$Costo.de.ventas_dif, main='Modelo de Efectos Mixtos')
 abline(a=0, b=1, lwd = 2, col = 'red')
 ```
 
-```{r echo = FALSE}
-Medidas = c("r2 train", "r2 adj train", "mse train") 
-Resultados = c(r2_score(preds, data_train_z$Costo.de.ventas_dif), adj_r2_score(preds, data_train_z$Costo.de.ventas_dif), mean((data_train_z$Costo.de.ventas_dif - preds)^2)) 
-
-measures = data.frame(Medidas, Resultados)
-
-kable(measures)%>%
-  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
-  column_spec(1,bold=T)
-```
-
+DEVOLVER TRANSFORMACIONES DEL LOGARITMO
 ```{r fig.align='center'}
 preds = predict(mod_me, newdata = data_test_z,allow.new.levels=TRUE)
 
 r2_model<-r2_score(preds, data_test_z$Costo.de.ventas_dif)
 adj_r2_model<-adj_r2_score(preds, data_test_z$Costo.de.ventas_dif)
-mse_model<-mean((data_test_z$Costo.de.ventas_dif - preds)^2)
 
 sub_tit = paste("R2", format(r2_model, digits=2, nsmall=2), 
                 "; R2_adj", format(adj_r2_model, digits=2, nsmall=2), 
@@ -647,18 +524,6 @@ sub_tit = paste("R2", format(r2_model, digits=2, nsmall=2),
 
 plot(preds,data_test_z$Costo.de.ventas_dif, main='Modelo de Efectos Mixtos', sub=sub_tit)
 abline(a=0, b=1, lwd = 2, col = 'red')
-```
-
-
-```{r echo = FALSE}
-Medidas = c("r2 test", "r2 adj test", "mse test") 
-Resultados = c(r2_model,adj_r2_model,mse_model)
-
-measures = data.frame(Medidas, Resultados)
-
-kable(measures)%>%
-  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
-  column_spec(1,bold=T)
 ```
 
 Desafortunadamente en el caso de prueba no se logra distinguir la tendencia natural en el comportamiento de la diferencia de los costos de venta y la escala se encuentra muy distante entre los valores predichos y los reales, como se espera desde el gráfico anterior. En esta evaluación los valores predichos se ponderan para generar una tendencia casi constante y la razonabilidad una vez más se pone en duda, aunque no por completo, dado que éstos valores efectivamente pueden ser alcanzados con condiciones ligeramente diferentes.
@@ -688,6 +553,8 @@ fig
 
 ### Superficie del modelo para un individuo conocido
 
+AGREGAR OTRO INDIVIDUO A LA SUPERFICIE
+
 ```{r}
 
 Desempleo = seq(min(data_train_z$Desempleo),max(data_train_z$Desempleo), length.out = 50)
@@ -708,268 +575,9 @@ fig %>% add_surface(z = ~z2, opacity = 0.98,colorscale = list(c(0,1),c("rgb(255,
 ```
  
 
-```{r}
-## Generalized linear model Lasso
-glm_obj <- glmmLasso(Costo.de.ventas_dif~TRM+PIB+Desempleo+Inflacion+Balance_CC+Balance_Fiscal+Tasa_Intervencion, rnd = list(NIT=~1+PIB), data = data_train_z, lambda=1.6, family = gaussian(link ="identity"))
-summary(glm_obj)
-```
+# Conclusiones
 
-```{r fig.align='center'}
-preds = predict(glm_obj, data = data_train_z)
-plot(preds,data_train_z$Costo.de.ventas_dif, main='Generalized linear model Lasso')
-abline(a=0, b=1, lwd = 2, col = 'red')
-```
+# Referencias 
+De donde sacamos los datos 
 
-Bajo esta aplicación del modelo Lasso es claro como ya se presenta una mejor distribución de los valores predichos contra los reales y éste es un comportamiento más natural y razonable en la industria, donde si bien hay un par que se alejan del común respecto a las diferencias en los costos de venta, el resto dentro de sus segmentos también puede tener distribuciones similares teniendo en cuenta sus montos.
-
-```{r, echo=FALSE}
-Medidas = c("r2 train", "r2 adj train", "mse train") 
-Resultados = c(r2_score(preds, data_train_z$Costo.de.ventas_dif), adj_r2_score(preds, data_train_z$Costo.de.ventas_dif), mean((data_train_z$Costo.de.ventas_dif - preds)^2)) 
-
-measures = data.frame(Medidas, Resultados)
-
-kable(measures)%>%
-  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
-  column_spec(1,bold=T)
-
-```
-
-```{r fig.align='center', echo=FALSE}
-preds = predict(glm_obj, newdata = data_test_z)
-
-r2_model<-r2_score(preds, data_test_z$Costo.de.ventas_dif)
-adj_r2_model<-adj_r2_score(preds, data_test_z$Costo.de.ventas_dif)
-mse_model<-mean((data_test_z$Costo.de.ventas_dif - preds)^2)
-
-sub_tit = paste("R2", format(r2_model, digits=2, nsmall=2), 
-                "; R2_adj", format(adj_r2_model, digits=2, nsmall=2), 
-                sep = " ", collapse = NULL)
-
-plot(preds,data_test_z$Costo.de.ventas_dif, main='Generalized linear model Lasso', sub=sub_tit)
-abline(a=0, b=1, lwd = 2, col = 'red')
-
-```
-
-```{r, echo=FALSE}
-Medidas = c("r2 test", "r2 adj test", "mse test") 
-Resultados = c(r2_model, adj_r2_model, mse_model) 
-
-measures = data.frame(Medidas, Resultados)
-
-kable(measures)%>%
-  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
-  column_spec(1,bold=T)
-```
-
-Como se presenta a continuación en esta oportunidad se captura algo de la relación positiva entre los valores predichos y los reales. Exceptuando los valores atipicos la razonabilidad se pone en duda debido al sentido de los signos y la propensión de éstos modelos a entregar resultados en escalas menores a las esperadas.
-
-
-```{r fig.align='center'}
-infl <- influence(mod_me, obs = TRUE)
-cooks.distance(infl)
-plot(infl, which = "cook")
-
-```
-
-```{r fig.align='center'}
-plot(all_data$Year, all_data$Costo.de.ventas, col=all_data$NIT, 
-     xlab = "Año", ylab = "Valor del Costo de Venta por Empresa")
-```
-
-
-```{r}
-## Generalized linear model Lasso quitando empresa outlier
-data_train_z_sinoutl = data_train_z[-c(8, 30, 52), ]
-glm_obj_s <- glmmLasso(Costo.de.ventas_dif~TRM+PIB+Balance_CC+Desempleo+Balance_Fiscal, rnd = list(NIT=~1+PIB+Desempleo), data = data_train_z_sinoutl, lambda=2, family = gaussian(link ="identity"))
-summary(glm_obj_s)
-```
-
- 
-```{r fig.align='center'}
-preds = predict(glm_obj_s, data = data_train_z_sinoutl)
-plot(preds,data_train_z_sinoutl$Costo.de.ventas_dif, main='Generalized linear model Lasso without outliers')
-abline(a=0, b=1, lwd = 2, col = 'red')
-```
-
-Aplicando la remoción de outliers la distribución hacia el centro de los datos se extiende más y esto es deseado, y la escala no se ve demasiado afectada por la corrección. En términos de mercado esta clase de resultados es la más natural y razonable entre todas, donde es claro como los indicadores macro-economicos pueden afectar de manera diferente a cada componente que representa la industria.
-
-
-```{r, echo=FALSE}
-Medidas = c("r2 train", "r2 adj train", "mse train") 
-Resultados = c(r2_score(preds, data_train_z_sinoutl$Costo.de.ventas_dif), 
-               -adj_r2_score(preds, data_train_z_sinoutl$Costo.de.ventas_dif), 
-                mean((data_train_z_sinoutl$Costo.de.ventas_dif - preds)^2)) 
-
-measures = data.frame(Medidas, Resultados)
-
-kable(measures)%>%
-  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
-  column_spec(1,bold=T)
-```
-
- 
-```{r fig.align='center'}
-preds = predict(glm_obj_s, newdata = data_test_z)
-
-r2_model<-r2_score(preds, data_test_z$Costo.de.ventas_dif)
-adj_r2_model<-adj_r2_score(preds, data_test_z$Costo.de.ventas_dif)
-mse_model<-mean((data_test_z$Costo.de.ventas_dif - preds)^2)
-
-sub_tit = paste("R2", format(r2_model, digits=2, nsmall=2), 
-                "; R2_adj", format(adj_r2_model, digits=2, nsmall=2), 
-                sep = " ", collapse = NULL)
-
-plot(preds,data_test_z$Costo.de.ventas_dif, main='Generalized linear model Lasso without outliers', sub = sub_tit)
-abline(a=0, b=1, lwd = 2, col = 'red')
-```
-
-Probando con el conjunto de testeo puede verse en comparación al resultado en test del modelo anterior que la distorsión se evidencia hacia los valores mayores en el conjunto predicho y el sentido de los signos, lo que le reduce razonabilidad. Sobre el efecto de escala éste se esperaba dado el resultado en el set de entrenamiento.
-
-```{r, echo=FALSE}
-Medidas = c("r2 test", "r2 adj test", "mse test") 
-Resultados = c(r2_model, adj_r2_model, mse_model) 
-
-measures = data.frame(Medidas, Resultados)
-
-kable(measures)%>%
-  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
-  column_spec(1,bold=T)
-```
-
-
-```{r}
-## Transformacion de variables (productos y divisiones)
-vars = c("TRM","PIB","Desempleo","Inflacion","Tasa_Intervencion","Balance_CC","Balance_Fiscal")
-df = data_train_z[vars]
-# x^2
-df_p <- df^2
-vector = c()
-for (i in colnames(df)) vector <- c(vector, paste(i,'_p_',i, sep  = ''))
-colnames(df_p) <-  vector
-# xi*xj
-df_s <- do.call(cbind,combn(colnames(df), 2,
-               FUN= function(x) list(df[x[1]]*df[x[2]])))
-colnames(df_s) <-  combn(colnames(df), 2,
-                 FUN = paste, collapse="_p_")
-# xi/xj
-df_t <- do.call(cbind,combn(colnames(df), 2,
-               FUN= function(x) list(df[x[1]]/df[x[2]])))
-colnames(df_t) <-  combn(colnames(df), 2,
-                 FUN = paste, collapse="_d_")
-df_trans=cbind(data_train_z,df_p,df_s,df_t)
-```
-
-```{r}
-## Generalized linear model Lasso con todas las transformaciones
-glm_obj <- glmmLasso(Costo.de.ventas_dif~TRM+PIB+Desempleo+Inflacion+Tasa_Intervencion+Balance_CC+Balance_Fiscal+TRM_p_TRM+PIB_p_PIB+Desempleo_p_Desempleo+Inflacion_p_Inflacion+Tasa_Intervencion_p_Tasa_Intervencion+Balance_CC_p_Balance_CC+Balance_Fiscal_p_Balance_Fiscal+TRM_p_PIB+TRM_p_Desempleo+TRM_p_Inflacion+TRM_p_Tasa_Intervencion+TRM_p_Balance_CC+TRM_p_Balance_Fiscal+PIB_p_Desempleo+PIB_p_Inflacion+PIB_p_Tasa_Intervencion+PIB_p_Balance_CC+PIB_p_Balance_Fiscal+Desempleo_p_Inflacion+Desempleo_p_Tasa_Intervencion+Desempleo_p_Balance_CC+Desempleo_p_Balance_Fiscal+Inflacion_p_Tasa_Intervencion+Inflacion_p_Balance_CC+Inflacion_p_Balance_Fiscal+Tasa_Intervencion_p_Balance_CC+Tasa_Intervencion_p_Balance_Fiscal+Balance_CC_p_Balance_Fiscal+TRM_d_PIB+TRM_d_Desempleo+TRM_d_Inflacion+TRM_d_Tasa_Intervencion+TRM_d_Balance_CC+TRM_d_Balance_Fiscal+PIB_d_Desempleo+PIB_d_Inflacion+PIB_d_Tasa_Intervencion+PIB_d_Balance_CC+PIB_d_Balance_Fiscal+Desempleo_d_Inflacion+Desempleo_d_Tasa_Intervencion+Desempleo_d_Balance_CC+Desempleo_d_Balance_Fiscal+Inflacion_d_Tasa_Intervencion+Inflacion_d_Balance_CC+Inflacion_d_Balance_Fiscal+Tasa_Intervencion_d_Balance_CC+Tasa_Intervencion_d_Balance_Fiscal+Balance_CC_d_Balance_Fiscal, rnd = list(NIT=~1+PIB+Balance_CC), data = df_trans, lambda=2.55, family = gaussian(link ="identity"))
-summary(glm_obj)
-### Para que converja, toca poner un lamba alto. Esto conlleva a que todas las betas sean 0
-### Un lambda menor lleva a que la matriz no sea invertible
-```
-
-### Lambda bajo (variable PIB, TRM y Balance Fiscal)
-```{r}
-## Generalized linear model Lasso 
-glm_obj_tr <- glmmLasso(Costo.de.ventas_dif~PIB+TRM+Balance_Fiscal, rnd = list(NIT=~1+PIB+TRM+Balance_Fiscal), data = df_trans, lambda=0.1, family = gaussian(link ="identity"))
-summary(glm_obj_tr)
-
-```
-
-```{r fig.align='center'}
-preds = predict(glm_obj_tr, data = data_train_z)
-plot(preds,data_train_z$Costo.de.ventas_dif, main='Generalized linear model Lasso : Lambda bajo')
-abline(a=0, b=1, lwd = 2, col = 'red')
-```
-
-```{r, echo=FALSE}
-Medidas = c("r2 train", "r2 adj train", "mse train") 
-Resultados = c(r2_score(preds, data_train_z$Costo.de.ventas_dif), 
-               -adj_r2_score(preds, data_train_z$Costo.de.ventas_dif), 
-                mean((data_train_z$Costo.de.ventas_dif - preds)^2)) 
-
-measures = data.frame(Medidas, Resultados)
-
-kable(measures)%>%
-  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
-  column_spec(1,bold=T)
-```
-
-```{r fig.align='center'}
-preds = predict(glm_obj_tr, newdata = data_test_z)
-
-r2_model<-r2_score(preds, data_test_z$Costo.de.ventas_dif)
-adj_r2_model<-adj_r2_score(preds, data_test_z$Costo.de.ventas_dif)
-mse_model<-mean((data_test_z$Costo.de.ventas_dif - preds)^2)
-
-sub_tit = paste("R2", format(r2_model, digits=2, nsmall=2), 
-                "; R2_adj", format(adj_r2_model, digits=2, nsmall=2), 
-                sep = " ", collapse = NULL)
-
-
-plot(preds,data_test_z$Costo.de.ventas_dif, main='Generalized linear model Lasso : Lambda bajo', sub = sub_tit)
-abline(a=0, b=1, lwd = 2, col = 'red')
-```
-
-```{r, echo=FALSE}
-Medidas = c("r2 test", "r2 adj test", "mse test") 
-Resultados = c(r2_model, adj_r2_model, mse_model) 
-
-measures = data.frame(Medidas, Resultados)
-
-kable(measures)%>%
-  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
-  column_spec(1,bold=T)
-```
-
-### Lambda alto  (variable PIB, TRM y Balance Fiscal)
-```{r}
-## Generalized linear model Lasso
-glm_obj_tr <- glmmLasso(Costo.de.ventas_dif~PIB+TRM+Balance_Fiscal, rnd = list(NIT=~1+PIB+TRM+Balance_Fiscal), data = df_trans, lambda=2.4, family = gaussian(link ="identity"))
-summary(glm_obj_tr)
-
-```
-
-```{r fig.align='center'}
-preds = predict(glm_obj_tr, data = data_train_z)
-plot(preds,data_train_z$Costo.de.ventas_dif, main = 'Generalized linear model Lasso : Lambda alto')
-abline(a=0, b=1, lwd = 2, col = 'red')
-```
-
-```{r, echo=FALSE}
-Medidas = c("r2 train", "r2 adj train", "mse train") 
-Resultados = c(r2_score(preds, data_train_z$Costo.de.ventas_dif), 
-               -adj_r2_score(preds, data_train_z$Costo.de.ventas_dif), 
-                mean((data_train_z$Costo.de.ventas_dif - preds)^2)) 
-
-measures = data.frame(Medidas, Resultados)
-
-kable(measures)%>%
-  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
-  column_spec(1,bold=T)
-``` 
-
-```{r fig.align='center'}
-preds = predict(glm_obj_tr, newdata = data_test_z)
-
-r2_model<-r2_score(preds, data_test_z$Costo.de.ventas_dif)
-adj_r2_model<-adj_r2_score(preds, data_test_z$Costo.de.ventas_dif)
-mse_model<-mean((data_test_z$Costo.de.ventas_dif - preds)^2)
-
-sub_tit = paste("R2", format(r2_model, digits=2, nsmall=2), 
-                "; R2_adj", format(adj_r2_model, digits=2, nsmall=2), 
-                sep = " ", collapse = NULL)
-
-plot(preds,data_test_z$Costo.de.ventas_dif, main='Generalized linear model Lasso : Lambda alto', sub = sub_tit)
-abline(a=0, b=1, lwd = 2, col = 'red')
-```
-
-```{r, echo=FALSE}
-Medidas = c("r2 test", "r2 adj test", "mse test") 
-Resultados = c(r2_model, adj_r2_model, mse_model) 
-
-measures = data.frame(Medidas, Resultados)
-
-kable(measures)%>%
-  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
-  column_spec(1,bold=T)
-```
+# Estimacion del esfuerzo (Anexo)
