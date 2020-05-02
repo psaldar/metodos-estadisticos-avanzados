@@ -435,11 +435,31 @@ En el conjunto de entrenamiento:
 ```{r fig.align='center'}
 preds = predict(mod_lin)
 
+r2_model<-r2_score(preds, data_train_z$Costo.de.ventas_dif)
+adj_r2_model<-adj_r2_score(preds, data_train_z$Costo.de.ventas_dif)
+mse_model<-mean((data_train_z$Costo.de.ventas_dif - preds)^2)
+
+sub_tit = paste("R2", format(r2_model, digits=2, nsmall=2), 
+                "; R2_adj", format(adj_r2_model, digits=2, nsmall=2), 
+                sep = " ", collapse = NULL)
+
 plot(lapply(preds, function(x) exp(x) - 1),  
      lapply(data_train_z$Costo.de.ventas_dif, function(x) exp(x) - 1), 
-     xlab = 'Valor predicho', ylab = 'Valor real', main='Modelo Lineal General (a escala porcentual)')
+     xlab = 'Valor predicho', ylab = 'Valor real', 
+     main='Modelo Lineal General (a escala porcentual)', sub = sub_tit)
 abline(a=0, b=1, lwd = 2, col = 'red')
 ```
+
+```{r echo=FALSE}
+Medidas = c("r2 train", "r2 adj train", "mse train") 
+Resultados = c(r2_model, adj_r2_model, mse_model) 
+measures = data.frame(Medidas, Resultados)
+
+kable(measures)%>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
+  column_spec(1,bold=T)
+```
+
 
 Como puede apreciarse en la gráfica anterior el comportamiento de las estimaciones es relativamente estática y no logra distribuir los puntos de información de forma dinámica. En particular, es claro como se obtuvo una segmentación en tres partes, lo cual es razonable y va en línea con la idea de crecimiento, estancamiento y decaida de los costos de venta de las compañías de la industria, es decir, si bien los valores predichos se encuentran desvíados de los reales, el sólo PIB y la propia variación de los costos permiten identificar tendencias en la industria.
 
@@ -450,6 +470,7 @@ preds_test = predict(mod_lin, newdata = data_test_z)
 
 r2_model<-r2_score(preds_test, data_test_z$Costo.de.ventas_dif)
 adj_r2_model<-adj_r2_score(preds_test, data_test_z$Costo.de.ventas_dif)
+mse_model<-mean((data_test_z$Costo.de.ventas_dif - preds_test)^2)
 
 sub_tit = paste("R2", format(r2_model, digits=2, nsmall=2), 
                 "; R2_adj", format(adj_r2_model, digits=2, nsmall=2), 
@@ -460,6 +481,16 @@ plot(lapply(preds_test, function(x) exp(x) - 1),
      xlab = 'Valor predicho', ylab = 'Valor Real', main='Modelo Lineal General (a escala porcentual)', sub=sub_tit)
 abline(a=0, b=1, lwd = 2, col = 'red')
 ```
+```{r echo=FALSE}
+Medidas = c("r2 test", "r2 adj test", "mse test") 
+Resultados = c(r2_model, adj_r2_model, mse_model) 
+measures = data.frame(Medidas, Resultados)
+
+kable(measures)%>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
+  column_spec(1,bold=T)
+```
+
 
 ### Graficos de Evaluacion de modelos
 
@@ -521,19 +552,44 @@ par(mfrow=c(3,2))
 plot(mod_me, which = c(1:6))
 ```
 
+En el conjunto de entrenamiento se tiene
+
 ```{r fig.align='center'}
 preds = predict(mod_me)
+
+r2_model<-r2_score(preds, data_train_z$Costo.de.ventas_dif)
+adj_r2_model<-adj_r2_score(preds, data_train_z$Costo.de.ventas_dif)
+mse_model<-mean((data_train_z$Costo.de.ventas_dif - preds)^2)
+
+sub_tit = paste("R2", format(r2_model, digits=2, nsmall=2), 
+                "; R2_adj", format(adj_r2_model, digits=2, nsmall=2), 
+                sep = " ", collapse = NULL)
+
 plot(lapply(preds, function(x) exp(x) - 1),
      lapply(data_train_z$Costo.de.ventas_dif, function(x) exp(x) - 1), 
-     main='Modelo de Efectos Mixtos (a escala porcentual)', xlab = 'Valor predicho', ylab = 'Valor Real')
+     main='Modelo de Efectos Mixtos (a escala porcentual)', sub = sub_tit,
+     xlab = 'Valor predicho', ylab = 'Valor Real')
 abline(a=0, b=1, lwd = 2, col = 'red')
 ```
+
+```{r echo=FALSE}
+Medidas = c("r2 train", "r2 adj train", "mse train") 
+Resultados = c(r2_model, adj_r2_model, mse_model) 
+measures = data.frame(Medidas, Resultados)
+
+kable(measures)%>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
+  column_spec(1,bold=T)
+```
+
+Por el lado del conjunto de validación
 
 ```{r fig.align='center'}
 preds = predict(mod_me, newdata = data_test_z,allow.new.levels=TRUE)
 
 r2_model<-r2_score(preds, data_test_z$Costo.de.ventas_dif)
 adj_r2_model<-adj_r2_score(preds, data_test_z$Costo.de.ventas_dif)
+mse_model<-mean((data_test_z$Costo.de.ventas_dif - preds)^2)
 
 sub_tit = paste("R2", format(r2_model, digits=2, nsmall=2), 
                 "; R2_adj", format(adj_r2_model, digits=2, nsmall=2), 
@@ -543,6 +599,16 @@ plot(lapply(preds, function(x) exp(x) - 1),
      lapply(data_test_z$Costo.de.ventas_dif, function(x) exp(x) - 1),
      main='Modelo de Efectos Mixtos (a escala porcentual)', xlab = 'Valor predicho', ylab = 'Valor Real', sub=sub_tit)
 abline(a=0, b=1, lwd = 2, col = 'red')
+```
+
+```{r echo=FALSE}
+Medidas = c("r2 test", "r2 adj test", "mse test") 
+Resultados = c(r2_model, adj_r2_model, mse_model) 
+measures = data.frame(Medidas, Resultados)
+
+kable(measures)%>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
+  column_spec(1,bold=T)
 ```
 
 Desafortunadamente en el caso de prueba no se logra distinguir la tendencia natural en el comportamiento de la diferencia de los costos de venta y la escala se encuentra muy distante entre los valores predichos y los reales, como se espera desde el gráfico anterior. En esta evaluación los valores predichos se ponderan para generar una tendencia casi constante y la razonabilidad una vez más se pone en duda, aunque no por completo, dado que éstos valores efectivamente pueden ser alcanzados con condiciones ligeramente diferentes.
