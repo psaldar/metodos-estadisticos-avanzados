@@ -66,9 +66,9 @@ Los datos que de la variable de respuesta (costos y gastos de ventas de algunas 
 
 Se conservaron solo las empresas cuya clasificación industrial uniforme internacional tenga la palabra “construcción” en ella y cuyos NIT estuvieran incluidos en el archivo de empresas de 2018. Luego de aplicar este filtro, se eliminaron también todas aquellas empresas que en algún año entre 2015 y 2018 tuvieran algún valor vacío (NaN) ya sea en sus costos de venta o en sus gastos de venta, dejando en total 33 empresas distintas en el dataset. A pesar de que solo se analizan en este reporte los años 2016 a 2018, fue necesario también descargar 2015 para poder calcular la variable en diferencias para 2016. Para calcular las variables de costos y gastos de ventas en diferencia porcentual, se usó su variación porcentual entre un año y otro, la cual se calculo con esta fórmula:
 
-$$ CostoDeVentasDif(t) = \dfrac{CostoDeVentas(t) – CostoDeVentas(t-1)}{CostoDeVentas(t)} $$
+$$ CostoDeVentasDif(t) = \dfrac{CostoDeVentas(t) – CostoDeVentas(t-1)}{abs(CostoDeVentas(t-1))} $$
 
-Donde t era el año. Así, se obtuvieron Costos_de_ventas_dif para los años 2016, 2017 y 2018.
+Donde t era el año. Así, se obtuvieron Costos_de_ventas_dif para los años 2016, 2017 y 2018. Se incluye el valro absoluto en el denominador en la fórmula para casos donde la variable sea negativa. Esto no ocurre con costos de ventas claramente, pero algunas variables macro si tienen valores negativos como por ejemplo el Balance_Fiscal, por eso se generaliza la fórmula de variación porcentual para todas con el valor absoluto.
 
 NOTA: A pesar de que en este trabajo los modelos que usamos son solo para el costo de ventas, aplicamos la misma transformación para el gasto de ventas para los análisis descriptivos.
 
@@ -102,12 +102,12 @@ NIT = all_data['NIT']
 
 ## Transformación de los Datos
 
-Para fines de intepretación de los modelos creados en el trabajo, consideraremos la transformación logarítmica tanto para las los predictores como para la variable respuesta, así la transformación que se realiza es:
+Para fines de intepretación de los modelos creados en el trabajo y para estabilizar un poco la varianza, consideraremos la transformación logarítmica tanto para las los predictores como para la variable respuesta para poder tener un modelo de tipo log-log, así la transformación que se realiza es:
 
 $$T(x) = log(1+x) $$
 Por ejemplo, la variable de salida tendra la forma
 
-$$ T(CostoDeVentasDif) = log(\dfrac{CostoDeVentas(t) – CostoDeVentas(t-1)}{CostoDeVentas(t)})$$
+$$ T(CostoDeVentasDif) = log(\dfrac{CostoDeVentas(t) – CostoDeVentas(t-1)}{abs(CostoDeVentas(t-1))}+1)$$
 
 ```{r}
 ### Transformacion de las variables
@@ -118,7 +118,7 @@ $$ T(CostoDeVentasDif) = log(\dfrac{CostoDeVentas(t) – CostoDeVentas(t-1)}{Cos
 ### regresion y = b*log(x) -> cambio en x implica un cambio de (b/100)% en y
 ### regresion y = b*x -> cambio en x implica un aumento de b en y
 
-### Transformacion 1: a nivel logaritmico
+### Transformacion a nivel logaritmico
 all_data$Costo.de.ventas_dif = log(1 + all_data$Costo.de.ventas_dif)
 all_data$PIB = log(1 + all_data$PIB)
 all_data$TRM = log(1 + all_data$TRM)
@@ -129,7 +129,8 @@ all_data$Inflacion = log(1 + all_data$Inflacion)
 all_data$Tasa_Intervencion = log(1 + all_data$Tasa_Intervencion)
 ```
 
-Cabe mencionar que al momento de realizar las interpretaciones de los resultados del modelo, se regresa la variable a su representación de niveles
+Cabe mencionar que al momento de realizar las interpretaciones de los resultados del modelo en cuanto a ajuste y capacidad predictiva, se regresa la variable de salida a su representación de variaciones porcentuales.
+
 
 ## Análisis descriptivo
 Damos una visualizacion inicial al conjunto de datos con el que se va a trabajar:
@@ -151,7 +152,7 @@ kable(ref_ds) %>%
   scroll_box("100%", height = "250px")
 ```
 
-En la siguiente tabla, vemos información descriptiva de las variables que se considerarán en la etapa de modelamiento del trabajo, vemos así que contamos con un total de 11 variables, cada una con magnitudes diferentes. Vemos que algunos indicadores tienen valores entre 0 y 1 tal como lo es el desempleo, mientras que otras variables representan dinero, tal como la trm, el monto de gastos y ventas. Así, tenemos una idea inicial de las características del conjunto de datos, por lo que se aplicarán lo métodos correspondientes cuando sea necesario, si lo que se realizará es sensible a la escala de los datos.
+En la siguiente tabla, vemos información descriptiva de las variables que se considerarán en la etapa de modelamiento del trabajo, vemos así que contamos con un total de 11 variables, cada una con magnitudes diferentes. Esto nos permite tener una idea inicial de las características del conjunto de datos.
 
 ```{r echo=FALSE}
 summary_df = stat.desc(data)
@@ -161,7 +162,7 @@ kable(summary_df) %>%
 
 ```
 
-Además de la información descriptiva presentados en la tabla anterior, podemos ver para cada una de las variables, su distribución de forma visual con la ayuda de la creación de histogramas de frecuencia.
+Además de la información descriptiva presentada en la tabla anterior, podemos ver para cada una de las variables y su distribución de forma visual con la ayuda de la creación de histogramas de frecuencia. Recordemos que en este caso las variables costos y gastos de venta son las variables originales en niveles, mientras que las variables Costos y Gastos de venta dif son las transformaciones logarítimicas de las variaciones porcentuales de dichas variables.
 
 ```{r fig.align='center', echo = FALSE}
 plot1 = ggplot(data, aes(x=Costo.de.ventas)) + 
@@ -203,8 +204,8 @@ kable(
 ) %>%
   kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)
 ```
-### Análisis desde variables absolutas
-#### Boxplot
+### Boxplot para variables absolutas
+
 
 ```{r fig.align='center'}
 par(mfrow=c(1,2))
@@ -233,8 +234,7 @@ kable(nits_tab)%>%
 
 ```
 
-### Análisis desde variables diferenciales
-#### Boxplot
+### Boxplot para variables diferenciales
 
 ```{r fig.align='center'}
 par(mfrow=c(1,2))
@@ -273,6 +273,10 @@ Ahora mirando la variable de diferencia de gastos, solamente 2 empresas tienen c
 
 Asi, estos cambios en las industrias en sus costos y gastos de ventas, pueden estar directamente relacionados con algunos eventos que hayan hecho la gran variación en la materia prima requerida para sus productos (tipos de mezlcas de cemento por ejemplo), además que el sector seleccionado depende bastante de los planes de infraestructura que se tengan, por lo que también es factible que en los periodos analizados, hayan ocurrido cambios en estos planes dentro de la contratación de cada empresa, y sean estas las causas que nos lleven a ver diferencias tan grandes de periodo a periodo (tanto positivas como negativas)
 
+## Nota
+Ahora, habiendo ya analizado las distribuciones de las variables, pasemos entonces a analizar la relación de la variable respuesta con los predictores. De aquí en adelante, usaremos siempre la variable de respuesta transformada (tanto para estos análisis de relación con predictores como para los gráficos de contorno y posteriormente para todos los modelos), ya que es la variable con la transformación logarítmica la que usaremos para las regresiones log-log. De esta forma, en todas las siguientes secciones del reporte cuando se mencione la variable "Costo de ventas" es la variable original en niveles, y la variable "Costo_de_ventas_dif" es la transformación logarítmica de la variación porcentual anual de dicha variable. Lo mismo aplica para Gastos de Ventas y Gastos_de_ventas_dif.
+
+
 #### Matriz de Covarianzas
 ```{r}
 cov_data = cov(data)
@@ -294,7 +298,7 @@ kable(round(cor_data,2)) %>%
 corrplot(cor_data, method="circle")
 ```
 
-Dado que en este trabajo se pretende realizar la modelación de las variables de costo y gasto de ventas (también considerando la variante en las diferencias de las variables por periodo), la matriz de correlación es un buen indicador para observar relaciones lineales existentes en las variables. En particular, vemos para el caso de la información de gastos, una "fuerte" correlación de las variables de costo, diferencia de costos y diferencia de ventas. Para este caso, es natural encontrar una correlacion positiva con dichas variables, pues es claro que costos y gastos están asociados entre sí. Igualmente, la variable de diferencia de gastos, fue calculada con la variable gastos, por lo tanto tiene sentido encontrar esta correlación. Por otro lado, tanto para la variable de ventas como gastos, no se ven correlaciones fuertes en relación a las variables macro-económicas, lo que nos indica que no existe una relación lineal entre esta variable y las demás. Por lo que una buena alternativa en este trabajo, será considerar transformaciones no lineales de las variables para encontrar una dependencia con la información de los costos de venta. Ahora, mirando las variables de diferencia de gastos y costos, vemos que existen dependencias lineales mayores con las variables macroeconómicas a diferencia de las variables originales, así vemos que la diferencia en costos tiene un grado de asociación con todas las variables macroeconomicas, mientras que los gastos presenta una relación lineal con el balance de cuenta corriente, por lo que se podría pensar que existen relaciones no lineales respecto a los otros indicadores económicos.
+Dado que en este trabajo se pretende realizar la modelación de las variables de costo y gasto de ventas (también considerando la transformación de las variables por periodo), la matriz de correlación es un buen indicador para observar relaciones lineales existentes en las variables. En particular, vemos para el caso de la información de gastos, una "fuerte" correlación de las variables de costo, Costos_dif , Gastos y Gastos_dif. Para este caso, es natural encontrar una correlacion positiva con dichas variables, pues es claro que costos y gastos están asociados entre sí. Igualmente, la variable de diferencia de gastos, fue calculada con la variable gastos, por lo tanto tiene sentido encontrar esta correlación. Por otro lado, tanto para la variable de costos como gastos(tanto las originales como las transformaciones), no se ven correlaciones fuertes en relación a las variables macro-económicas, lo que nos indica que no existe una clara relación lineal entre estas variable y las demás.  Ahora, mirando las variables de diferencia de gastos y costos, vemos que existen dependencias lineales mayores con las variables macroeconómicas a diferencia de las variables originales, así vemos que la diferencia en costos tiene un grado de asociación con todas las variables macroeconomicas, mientras que los gastos presenta una relación lineal con el balance de cuenta corriente, por lo que se podría pensar que existen relaciones no lineales respecto a los otros indicadores económicos.
 
 ## Visualización de la distribución de los datos
 
@@ -388,9 +392,13 @@ p4 = grafica(data, "Gastos.de.ventas" , "Gastos.de.ventas_dif")
 p5 = grafica(data, "Costo.de.ventas_dif" , "Gastos.de.ventas_dif")
 ```
 
+ANALISIS DE CONTORNOS
+
+
+
 ## Creación de modelos
 
-Recordar que tal como se mencionó al inicio, se realizó una transformación logarítmica tanto a las variables macroeconómicas, como a la variable respuesta (diferencia porcentual de los costos de venta), por lo que al momento de la interpretación de los modelos, estaremos trabajando con regresiones del estilo log-log
+Recordar que tal como se mencionó al inicio, se realizó una transformación logarítmica tanto a las variables macroeconómicas, como a la variable respuesta (diferencia porcentual anual de los costos de venta), por lo que al momento de la interpretación de los modelos, estaremos trabajando con regresiones del estilo log-log.
 
 ```{r}
 data_aux = select(all_data,select = -starts_with('NIT'))
@@ -399,7 +407,7 @@ data_aux = select(data_aux,select = -starts_with('Year'))
 
 Realizamos la partición del conjunto de datos en dos conjuntos diferentes, el primer conjunto corresponde a los datos utilizados en la creación o entrenamiento del modelo, mientras que el segundo, corresponder a aquellos datos que el modelo no ha visto, por lo que servirá para probar el desempeño del modelo en su capacidad predictiva. 
 
-La selección de ambos conjuntos se basa en la información de las empresas, pues se desea que el costo promedio de ventas las empresas que se considera en el conjunto de entrenamiento, sea similar al costo promedio de ventas de las empresas en el conjunto de prueba. Partiendo de ese objetivo para la partición, se consideran 100.000 combinaciones diferentes de las empresas (combinaciones donde el conjunto de entrenamiento tenga 22 empresas y el conjunto de prueba tenga 11 empresas), y se selecciona la mejor combinación de empresas cuyo error cuadrático en los promedios de costos de ventas sea menor. Esta tarea de la selección de las empresas fue realizada en un Notebook de python que se puede encontrar en el repositorio.
+La selección de ambos conjuntos se basa en la información de las empresas, pues se desea que el valor promedio de las variaciones porcentuales anuales del costo de ventas de las empresas que se considera en el conjunto de entrenamiento, sea similar al valor promedio de las variaciones porcentuales anuales del costo de ventas de las empresas en el conjunto de prueba. Partiendo de ese objetivo para la partición, se consideran 25000 combinaciones diferentes de las empresas (combinaciones donde el conjunto de entrenamiento tenga 22 empresas y el conjunto de prueba tenga 11 empresas), y se selecciona la mejor combinación de empresas cuyo error cuadrático en los promedios de las variaciones porcentuales anuales del costo de ventas sea menor. Esta tarea de la selección de las empresas fue realizada en un Notebook de python que se puede encontrar en el repositorio.
 
 ```{r}
 empresas_train = c(800015615, 800045720,
@@ -448,13 +456,15 @@ data_test_z$NIT = NIT_test
 ```
 
 
-Definición de las funciones para calcular el R-squared y R-Squared Adjusted
+Se crean funciones para calcular el R-squared y R-Squared Adjusted, las cuales serán usadas más adelante para evaluar el ajuste y la capacidad predictiva de los modelos.
 ```{r}
 r2_score <- function(x, y) summary(lm(y~x))$r.squared
 adj_r2_score <- function(x, y) summary(lm(y~x))$adj.r.squared
 ```
 
 ## Modelo para los Costos
+
+Primero, se evalúa el rendimiento de un modelo lineal general para realizar las predicciones. Se utiliza una selección stepwise para decidir que variables se incluirían en este modelo lineal.
 
 ### Modelo Lineal General
 
@@ -465,18 +475,18 @@ summary(step.model)
 ```
 
 
-De los resultados anteriores, vemos que el modelo lineal general con mejor desempeño es aquel que solo considera el PIB además de un intercepto. Pues vemos que en particular para el PIB, su error estandar se reduce considerablemente (un poco más de la mitad), además que vemos mejores valores al R-Squared Adjusted. Por lo tanto, procedemos a mirar el desempeño de un modelo entrenado considerando unicamente el PIB.
+De los resultados anteriores, vemos que el modelo lineal general con mejor desempeño es aquel que solo considera el PIB además de un intercepto. Pues vemos que en particular para el PIB, su error estandar se reduce considerablemente (un poco más de la mitad), además que vemos mejores valores en el R-Squared Adjusted. Por lo tanto, procedemos a mirar el desempeño de un modelo entrenado considerando unicamente el PIB.
 
 ```{r}
 mod_lin = lm('Costo.de.ventas_dif~PIB', data = data_train_z)
 summary(mod_lin)
 ```
 
-En este caso el modelo está siendo exclusivamente dependiente de la dinámica el PIB, y se tiene que un aumento en un 1% de la variación del PIB anual tiene un impacto positivo de hasta 12.70% sobre la variación en los costos de venta, lo cual es razonable, en particular porque al percibir mayor crecimiento en la economía global la industria, naturalmente, también se ve afectada al haber mayor producción y un mayor retorno de dinero; no obstante, las dinámicas de las compañías que componen la industria muchas veces se ven influenciada por el factor macro más global de manera diferentes, ello por su tamaño o tendencias, así que probablemente sea necesario modelar dichos efectos de una forma más robusta.
+En este caso el modelo está siendo exclusivamente dependiente de la dinámica el PIB, y se tiene que un aumento en un 1% de la variación porcentual del PIB anual tiene un impacto positivo de hasta 12.70% sobre la variación porcentual de los costos de venta, lo cual es razonable, en particular porque al percibir mayor crecimiento en la economía global la industria, naturalmente, también se ve afectada al haber mayor producción y un mayor retorno de dinero; no obstante, las dinámicas de las compañías que componen la industria muchas veces se ven influenciada por el factor macro más global de manera diferentes, ello por su tamaño o tendencias, así que probablemente sea necesario modelar dichos efectos de una forma más robusta.
 
 #### Desempeño del Modelo Entrenado
 
-En el conjunto de entrenamiento:
+En el conjunto de entrenamiento (capacidad de ajuste):
 
 ```{r fig.align='center'}
 preds = predict(mod_lin)
@@ -509,7 +519,8 @@ kable(measures)%>%
 
 Como puede apreciarse en la gráfica anterior el comportamiento de las estimaciones es relativamente estática y no logra distribuir los puntos de información de forma dinámica. En particular, es claro como se obtuvo una segmentación en tres partes, lo cual es razonable y va en línea con la idea de crecimiento, estancamiento y decaida de los costos de venta de las compañías de la industria, es decir, si bien los valores predichos se encuentran desvíados de los reales, el sólo PIB y la propia variación de los costos permiten identificar tendencias en la industria. Los resultados generan variaciones estimadas desde -0.15% hasta -0.06%, lo que genera un intervalo razonable teniendo en cuenta la media (-0.03%) y desviación estandar (0.27%) de la variable de estudio. 
 
-La aplicación sobre el conjunto de prueba desplegado a continuación genera resultados muy similares a aquellos sobre el de entrenamiento. El ajuste es considerablemente bajo, lo cual es esperado, debido a la separación natural de las tendencias de las empresas y a la falta de la modelación del efecto del indicador sobre la medida de estudio; no obstante, el modelo entrega valores que se mantienen en un rango conservador, es decir, no genera estimaciones imposibles que efectivamente pudieran alcanzarse bajo reducciones en las cuentas de costos de ventas.
+
+Ahora, evaluemos el rendimiento del modelo en el conjunto de prueba (capacidad predictiva):
 
 ```{r fig.align='center'}
 preds_test = predict(mod_lin, newdata = data_test_z)
@@ -537,6 +548,9 @@ kable(measures)%>%
   column_spec(1,bold=T)
 ```
 
+La aplicación sobre el conjunto de prueba mostrada genera resultados muy similares a aquellos sobre el de entrenamiento. La capacidad predictiva es también considerablemente baja (al igual que el ajuste), lo cual es esperado, debido a la separación natural de las tendencias de las empresas y a la falta de la modelación del efecto del indicador sobre la medida de estudio; no obstante, el modelo entrega valores que se mantienen en un rango conservador, es decir, no genera estimaciones imposibles que efectivamente pudieran alcanzarse bajo reducciones en las cuentas de costos de ventas.
+
+Los resultados obtenidos tanto en la capacidad de ajuste del modelo lineal como en su capacidad predictiva son los esperados: al tener variables predictivas exactamente iguales para todas las empresas del mismo año, es de esperar que no logré obtener buenos resultados ya que no tiene cómo modelar de forma particular a cada empresa (no se le incluyen variables indicadoras). Sin embargo, esperamos resolver más adelante este problema al introductir un modelo de efectos mixtos para la estimación, el cuál logrará detectar los factores particulares de cada empresa y separar mejor el componente poblacional del particular.
 
 ### Gráficos de Evaluación de modelos
 
@@ -547,18 +561,9 @@ mod_plot = plot(mod_lin, which = c(1:6))
 
 
 
-De los gráficos anteriores, en particular analizando el valor de la distancia de Cook para las observaciones, notamos que las observaciones 17, 30, 52 son candidatas a ser registros atípicos en el conjunto de datos, por lo que entrenaremos un nuevo modelo eliminando estos registros. Notar que los outliers corresponden a la empresa con NIT 890909034 para el 2016, y para la empresa 800236890 en los periodos del 2017 y 2018, información que se contrasta con los outliers obtenidos en el boxplot, lo cual están incluidos tanto mirando la variable de diferencia costos de venta.En vista de su comportamiento raro en magnitud según el boxplot, no es de extrañarse que estos registros hayan sido aquellos con la distancia de cook mas grande. Procederemos a entrenar un modelo removiendo estos registros
+De los gráficos anteriores, en particular analizando el valor de la distancia de Cook para las observaciones, notamos que las observaciones 17, 30, 52 son candidatas a ser registros atípicos en el conjunto de datos, por lo que entrenaremos un nuevo modelo eliminando estos registros. Notar que los outliers corresponden a la empresa con NIT 890909034 para el 2016, y para la empresa 800236890 en los periodos del 2017 y 2018, información que se contrasta con los outliers obtenidos en el boxplot, lo cual están incluidos tanto mirando la variable de diferencia costos de venta.En vista de su comportamiento raro en magnitud según el boxplot, no es de extrañarse que estos registros hayan sido aquellos con la distancia de cook mas grande. 
 
-```{r}
-### Vector para eliminar registros atipicos según la información obtenida por la distancia de cook
-outliers = c(17, 30, 52)
-data_train_z_noOut = data_train_z[-outliers,]
-```
 
-```{r fig.align='center'}
-h_ii<-hatvalues(mod_lin)
-plot(hatvalues(mod_lin),las=1,xlab="i",ylab="hii",main="Influencia (h_ii)",type="h")
-```
 
 ## Modelos Lineales Generalizados (GLM)
 
@@ -572,7 +577,7 @@ Dentro de los modelos que fueron expuestos a lo largo del curso, se encuentra la
 
 * Gaussiana: Por la caracteristica de la distribución, sabemos que es posible modelar variables respuesta que su dominio sea los números reales, por lo que la variable de diferencia de costos de venta encaja en este tipo de modelo, ahora bien, esto es equivalente a considerar el modelo lineal general presentado anteriormente.
 
-Por el análisis realizado, no se considera pertinente utilizar alguno de los otros modelos lineales generalizados para el modela miento de la variable transformada de diferencia relativa de costos de venta
+Por el análisis realizado, no se considera pertinente utilizar alguno de los otros modelos lineales generalizados para el modela miento de la variable transformada de diferencia relativa de costos de venta.
 
 
 ### Modelo de Efectos Mixtos
@@ -583,7 +588,7 @@ mod_me = lmer('Costo.de.ventas_dif~Desempleo+PIB+(0+Desempleo|NIT)+(PIB|NIT)', d
 summary(mod_me)
 ```
 
-Ahora, considerando el modelo de efectos mixtos, observando primero la componente de los efectos fijos, vemos que un incremento en un 1% de la variación del PIB anual del pais, refleja un aumento en un 12.63% en la diferencia de los costos de venta anuales de las empresas, mientras que al ver un cambio de un 1% en el desempleo, este disminuye la diferencia de los costos en un 1.2765%. Dichos resultados son completamente razonables en la realidad por el argumento previamente expuesto sobre el efecto del crecimiento del PIB en la variación de los costos al presentarse mayor producción que genera incrementos en los retornos de dinero, por otro lado, una variación negativa sobre el desempleo combinado con el PIB claramente afecta la industria al presentarse una mano de obra más barata lo que reduce los gastos y de forma indirecto los costos. Aquí es importante notar como la tasa de crecimiento potencial asociada al crecimiento de productividad debe, en teoría, mantenerse en línea con una reducción con la tasa de desempleo.
+Ahora, considerando el modelo de efectos mixtos, observando primero la componente de los efectos fijos, vemos que un incremento en un 1% de la variación del PIB anual del pais, refleja un aumento en un 12.63% en la diferencia de los costos de venta anuales de las empresas, mientras que al ver un cambio de un 1% en el desempleo, este disminuye la diferencia de los costos en un 1.2765%. Dichos resultados son completamente razonables en la realidad por el argumento previamente expuesto sobre el efecto del crecimiento del PIB en la variación de los costos al presentarse mayor producción que genera incrementos en los retornos de dinero. Por otro lado, una relación negativa entre el desempleo y la diferencia de costos de venta claramente tiene sentido ya que al presentarse mayor desempleo se tendrá una mano de obra más barata lo que reduce los gastos y de forma indirecta los costos. Aquí es importante notar como la tasa de crecimiento potencial asociada al crecimiento de productividad debe, en teoría, mantenerse en línea con una reducción con la tasa de desempleo.
 
 Ahora bien, considerando los efectos aleatorios, los cuales tendrán un efecto sobre la estimación en aquellas empresas que fueron consideradas en el entrenamiento (mirando al NIT), vemos que adicional a la componente fija, el cambio de 1% de la variación del PIB anual, que antes tenia un efecto en el aumento del 12.63% sobre la diferencia de los costos de venta, ahora se aumenta  en un 0.56% adicional, es decir, para aquellas empresas que haya visto el modelo previamente, el aumento anual en los costos de venta corresponderá a un 13.198%. Ahora realizando el análisis de los efectos aleatorios para el desempleo, vemos que el desempleo tiene un incremento del 3.576% en la diferencia de los costos de venta anual por un aumento del 1% en el desempleo, por lo que para aquellas empresas consideradas al momento de entrenar el modelo, presentarán un aumento del 2.299669% en la diferencia de costos anuales por un cambio de un 1% en el desempleo, por lo que estas empresas pueden tener caracteristicas que evitan que el desempleo no tenga un imacto muy grande en sus costos, lo cual, una vez más, refleja la realidad de la industria de la construcción donde se presentan actores de magnitudes muy diferentes que pueden mitigar el efecto macro al poder mantener niveles de producción altos que les permita seguir generando imgresos sin tener que afectar a su capital humano.
 
@@ -593,7 +598,7 @@ par(mfrow=c(3,2))
 plot(mod_me, which = c(1:6))
 ```
 
-En el conjunto de entrenamiento se tiene
+Usamos el conjunto de entrenamiento para medir la capacidad de ajuste. En el conjunto de entrenamiento, el modelo de efectos mixtos propuestos se comporta así:
 
 ```{r fig.align='center'}
 preds = predict(mod_me)
@@ -622,6 +627,9 @@ kable(measures)%>%
   kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
   column_spec(1,bold=T)
 ```
+
+
+ANALISIS DE DESEMPEÑO Y MÉTRICAS CONJUNTO DE ENTRENAMIENTO.
 
 Por el lado del conjunto de validación
 
@@ -658,6 +666,8 @@ Desafortunadamente en el caso de prueba no se logra distinguir la tendencia natu
  
 ### Superficie poblacional del modelo
 
+Miraremos la superficie poblacional del modelo, es decir, como cambia el valor predicho de una solución general desconcodia de la población (para la cual solo se le aplicarían los efectos fijos, y no los aleatorios) al variar los valores de las dos variables explicativas que inciden sobre ella (desempleo y PIB). Recordar que todas las variables en estos gráficos tienen ya la transformación del logaritmo antes explicada.
+
 ```{r}
 
 Desempleo = seq(min(data_train_z$Desempleo),max(data_train_z$Desempleo), length.out = 50)
@@ -670,8 +680,15 @@ data_surface$NIT = 1000
 z = predict(mod_me, newdata = data_surface,allow.new.levels=TRUE)
 z = matrix(z, nrow = 50, ncol = 50)
 
+
+custom_txt <- paste0("Desempleo: ", data_surface$Desempleo,
+                    "\nPIB: ", data_surface$PIB, # correct break syntax
+                    "\nCosto_de_ventas_dif: ", z) %>%
+    matrix(50,50) # dim must match plotly's under-the-hood? matrix 
+
+
 ### Toca rotar la figura para poder ver el plano
-fig <- plot_ly(x = PIB, y = Desempleo, z = z) %>% add_surface()
+fig <- plot_ly(x = PIB, y = Desempleo, z = z,    text = custom_txt,      hoverinfo = "text") %>% add_surface(colorbar=list(title='Poblacional'))%>%layout(scene = list(xaxis = list(title = 'PIB'), yaxis = list(title = 'Desempleo'),zaxis = list(title = 'Costo_de_ventas_dif')))
 fig
 
 ```
@@ -679,6 +696,7 @@ fig
 
 ### Superficie del modelo para un individuo conocido
 
+Para visualizar el funcionamiento del modelo de efectos mixtos, además de graficar la superficie poblacional general, graficaremos también la superficie de un par de invidiuos ya conocidos por el modelo. En este caso, como los individuos fueron usados por el modelo de efectos mixtos al entrenarse, se les aplica a dichos individuos un efecto aleatorio propio a cada uno de ellos (además del efecto fijo general que se aplica de la misma forma para todos). Por esta razón, veremos que las superficies de estos dos individuos son distintas entre sí y ademas son distintas de la superficie poblacional general.
 
 ```{r}
 
@@ -693,23 +711,25 @@ z2 = predict(mod_me, newdata = data_surface)
 z2 = matrix(z2, nrow = 50, ncol = 50)
 
 ### Toca rotar la figura para poder ver el plano
-fig %>% add_surface(z = ~z2, opacity = 0.98,colorscale = list(c(0,2),c("rgb(255,112,184)","rgb(120,0,64)"))) %>% layout(title="Poblacional (azul y verde) vs Un Individuo (Rosa)")
-data_surface$NIT = empresas_train[20]
+data_surface$NIT = empresas_train[3]
 z3 = predict(mod_me, newdata = data_surface)
 z3 = matrix(z3, nrow = 50, ncol = 50)
 
-### Toca rotar la figura para poder ver el plano
-fig %>% add_surface(z = ~z3, opacity = 0.98,colorscale = list(c(0,2),c("rgb(255,112,184)","rgb(220,100,164)"))) %>% layout(title="Poblacional (azul y verde) vs Un Individuo (Rosa)")
 
 fig %>% add_surface(z = ~z2, opacity = 0.98,colorscale = list(c(0,1),c("rgb(255,112,184)","rgb(120,0,64)")),colorbar=list(title=paste('NIT ', empresas_train[1]))) %>% add_surface(z = ~z3, opacity = 0.94,colorscale = list(c(0,1),c("rgb(0,0,0)","rgb(200,200,200)")),     colorbar=list( title=paste('NIT ', empresas_train[3]))) %>% layout(title="Poblacional (azul y verde) vs dos Individuos (uno rosa y uno negro)")
 
 ```
  
+
+
 De las gráficas obtenidas al momento de realizar la superficie del comportamiento de la diferencia de costos de ventas en base a la variación del PIB y el Desempleo, vemos que en particular para las dos empresas que se muestran, tienen un incremento porcentual anual en sus costos de venta mayor al promedio (ya que es claro que dichas superficies se ubican por encima de la superficie poblacional, la cual nos indica el promedio general de la variación en los costos de venta anuales), además cabe resaltar, que la empresa con NIT 800081030 (superficie negra) tiene una tendencia a tener un mayor aumento en la variación de sus costos de venta anuales en comparación a la empresa con NIT 800015615 (superficie morada).
+
 
 # Conclusiones
 
+
 # Referencias 
 De donde sacamos los datos 
+
 
 # Estimacion del esfuerzo (Anexo)
