@@ -121,6 +121,8 @@ $$ T(CostoDeVentasDif) = log(\dfrac{CostoDeVentas(t) – CostoDeVentas(t-1)}{abs
 ### Transformacion a nivel logaritmico
 all_data$Costo.de.ventas_dif_sinlog = all_data$Costo.de.ventas_dif
 all_data$Costo.de.ventas_dif = log(1 + all_data$Costo.de.ventas_dif)
+all_data$Gastos.de.ventas_dif_sinlog = all_data$Gastos.de.ventas_dif
+all_data$Gastos.de.ventas_dif = log(1 + all_data$Gastos.de.ventas_dif)
 all_data$PIB = log(1 + all_data$PIB)
 all_data$TRM = log(1 + all_data$TRM)
 all_data$Desempleo = log(1 + all_data$Desempleo)
@@ -184,9 +186,13 @@ plot4 = ggplot(data, aes(x=Gastos.de.ventas_dif)) +
 
 plot5 = ggplot(all_data, aes(x=Costo.de.ventas_dif_sinlog)) + 
  geom_histogram(aes(y=..density..), colour="black", fill="white", bins =30)+
- geom_density(alpha=.2, fill="#FF6666") 
+ geom_density(alpha=.2, fill="#FF6666")
 
-grid.arrange(plot1, plot2, plot3, plot4, plot5 ,ncol=2, nrow=3)
+plot6 = ggplot(all_data, aes(x=Gastos.de.ventas_dif_sinlog)) + 
+ geom_histogram(aes(y=..density..), colour="black", fill="white", bins =30)+
+ geom_density(alpha=.2, fill="#FF6666")
+
+grid.arrange(plot1, plot2, plot3, plot4, plot5, plot6 ,ncol=2, nrow=3)
 ```
 
 Vamos a obtener la informacion relacionada a las medidas de centralidad y dispersion del conjunto de datos. Inicialmente, presentamos información del vector de medias y medianas que describen la centralidad del conjunto de datos. Posteriormente, consideramos las matrices de Covarianza y Correlación para tener una intuición de la variabilidad de la información que consideramos.
@@ -242,10 +248,9 @@ kable(nits_tab)%>%
 ### Boxplot para variables diferenciales
 
 ```{r fig.align='center'}
-par(mfrow=c(1,3))
+par(mfrow=c(1,2))
 bxplot_costos_dif = boxplot(Costo.de.ventas_dif~Year, data = all_data)
 bxplot_gastos_dif = boxplot(Gastos.de.ventas_dif~Year, data = all_data)
-bxplot_costos_dif_sinlog = boxplot(Costo.de.ventas_dif_sinlog~Year, data = all_data)
 ```
 
 ```{r}
@@ -259,6 +264,26 @@ kable(nits_tab)%>%
 ```
 
 ```{r}
+### Outliers para gastos dif
+nits_tab = t(all_data[(all_data$Gastos.de.ventas_dif %in% bxplot_gastos_dif$out),]$NIT)
+rownames(nits_tab) <- c("NITs")
+
+kable(nits_tab)%>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
+  column_spec(1,bold=T)
+
+```
+
+#### Boxplot para las variables sin log
+
+```{r fig.align='center'}
+par(mfrow=c(1,2))
+bxplot_costos_dif_sinlog = boxplot(Costo.de.ventas_dif_sinlog~Year, data = all_data)
+bxplot_gastos_dif_sinlog = boxplot(Gastos.de.ventas_dif_sinlog~Year, data = all_data)
+```
+
+
+```{r}
 ### Outliers para costos dif sin log
 nits_tab = t(all_data[(all_data$Costo.de.ventas_dif_sinlog %in% bxplot_costos_dif_sinlog$out),]$NIT)
 rownames(nits_tab) <- c("NITs")
@@ -270,8 +295,8 @@ kable(nits_tab)%>%
 ```
 
 ```{r}
-### Outliers para gastos dif
-nits_tab = t(all_data[(all_data$Gastos.de.ventas_dif %in% bxplot_gastos_dif$out),]$NIT)
+### Outliers para gastos dif sin log
+nits_tab = t(all_data[(all_data$Gastos.de.ventas_dif_sinlog %in% bxplot_gastos_dif_sinlog$out),]$NIT)
 rownames(nits_tab) <- c("NITs")
 
 kable(nits_tab)%>%
@@ -279,9 +304,6 @@ kable(nits_tab)%>%
   column_spec(1,bold=T)
 
 ```
-
-
-
 
 ### Análisis:
 
