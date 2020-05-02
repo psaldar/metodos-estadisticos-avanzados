@@ -87,7 +87,8 @@ voyvo = 0
 for y in years:
     anterior = lista_aux[voyvo]
     actual = lista_aux[voyvo+1]
-    dic_cruces[y]['Tasa_Intervencion'] =  (actual-anterior)/abs(anterior)
+#    dic_cruces[y]['Tasa_Intervencion'] =  (actual-anterior)/abs(anterior)   ### Como variacion porcentual
+    dic_cruces[y]['Tasa_Intervencion'] =  actual  ### Como la tasa de cada year
     voyvo = voyvo+1
 
 
