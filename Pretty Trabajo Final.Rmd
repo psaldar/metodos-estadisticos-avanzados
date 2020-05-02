@@ -36,7 +36,9 @@ library(olsrr)
 
 ### Repositorio
 
-## Introduccion
+Los diferentes análisis, preparación de datos y demás tareas requeridas en este trabajo fueron realizados en los softwares R y Python. La información necesaria para replicar los resultados presentados en este reporte se encuentran en el siguiente repositorio de GitHub: https://github.com/psaldar/metodos-estadisticos-avanzados . Dentro de la información se incluye los archivos que contienen tanto los datos antes y después de su procesamiento, además de los códigos de Python en Notebooks de Jupyter como el código de R en un documento en Markdown.
+
+## Introducción
 
 El modelamiento del comportamiento de diferentes variables es un tema que ha sido estudiado en sectores energéticos, industriales, económicos y financieros. De allí se comienza a apreciar tanto la importancia que tienen los datos hoy en día al igual que las técnicas utilizadas para su modelamiento. La estadística es una disciplina que se preocupa por la recolección, organización, interpretación y análisis de datos, que, según su aplicación puede traer un gran impacto en la industria al momento de la toma de decisiones. En particular, diferentes técnicas estadísticas han sido utilizadas en el sector financiero, las cuales permiten modelar comportamiento de los clientes, acciones, entre otras variables.
 
@@ -294,7 +296,7 @@ corrplot(cor_data, method="circle")
 
 Dado que en este trabajo se pretende realizar la modelación de las variables de costo y gasto de ventas (también considerando la variante en las diferencias de las variables por periodo), la matriz de correlación es un buen indicador para observar relaciones lineales existentes en las variables. En particular, vemos para el caso de la información de gastos, una "fuerte" correlación de las variables de costo, diferencia de costos y diferencia de ventas. Para este caso, es natural encontrar una correlacion positiva con dichas variables, pues es claro que costos y gastos están asociados entre sí. Igualmente, la variable de diferencia de gastos, fue calculada con la variable gastos, por lo tanto tiene sentido encontrar esta correlación. Por otro lado, tanto para la variable de ventas como gastos, no se ven correlaciones fuertes en relación a las variables macro-económicas, lo que nos indica que no existe una relación lineal entre esta variable y las demás. Por lo que una buena alternativa en este trabajo, será considerar transformaciones no lineales de las variables para encontrar una dependencia con la información de los costos de venta. Ahora, mirando las variables de diferencia de gastos y costos, vemos que existen dependencias lineales mayores con las variables macroeconómicas a diferencia de las variables originales, así vemos que la diferencia en costos tiene un grado de asociación con todas las variables macroeconomicas, mientras que los gastos presenta una relación lineal con el balance de cuenta corriente, por lo que se podría pensar que existen relaciones no lineales respecto a los otros indicadores económicos.
 
-## Visualizacion de la distribución de los datos
+## Visualización de la distribución de los datos
 
 ```{r, echo = FALSE}
 panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...)
@@ -323,7 +325,7 @@ panel.hist <- function(x, ...)
 pairs(data,diag.panel = panel.hist, lower.panel = panel.cor)
 ```
 
-### Visualizacion de los datos segun curvas de normalidad
+### Visualización de los datos según curvas de normalidad
 
 ```{r}
 ### Funcion para encontrar los contornos
@@ -386,7 +388,7 @@ p4 = grafica(data, "Gastos.de.ventas" , "Gastos.de.ventas_dif")
 p5 = grafica(data, "Costo.de.ventas_dif" , "Gastos.de.ventas_dif")
 ```
 
-## Creacion de modelos
+## Creación de modelos
 
 Recordar que tal como se mencionó al inicio, se realizó una transformación logarítmica tanto a las variables macroeconómicas, como a la variable respuesta (diferencia porcentual de los costos de venta), por lo que al momento de la interpretación de los modelos, estaremos trabajando con regresiones del estilo log-log
 
@@ -536,7 +538,7 @@ kable(measures)%>%
 ```
 
 
-### Graficos de Evaluacion de modelos
+### Gráficos de Evaluación de modelos
 
 ```{r fig.align='center'}
 par(mfrow=c(3,2))
@@ -556,11 +558,6 @@ data_train_z_noOut = data_train_z[-outliers,]
 ```{r fig.align='center'}
 h_ii<-hatvalues(mod_lin)
 plot(hatvalues(mod_lin),las=1,xlab="i",ylab="hii",main="Influencia (h_ii)",type="h")
-```
-### Inflacion de la varianza
-
-```{r}
-#vif(mod_lin)
 ```
 
 ## Modelos Lineales Generalizados (GLM)
@@ -682,7 +679,6 @@ fig
 
 ### Superficie del modelo para un individuo conocido
 
-AGREGAR OTRO INDIVIDUO A LA SUPERFICIE
 
 ```{r}
 
