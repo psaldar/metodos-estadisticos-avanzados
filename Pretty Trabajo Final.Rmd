@@ -562,15 +562,20 @@ PIB = seq(min(data_train_z$PIB),max(data_train_z$PIB), length.out = 50)
 
 data_surface = expand.grid(Desempleo,PIB)
 names(data_surface) = c('Desempleo','PIB')
-data_surface$NIT = 800015615
+data_surface$NIT = empresas_train[1]
 
 z2 = predict(mod_me, newdata = data_surface)
 z2 = matrix(z2, nrow = 50, ncol = 50)
 
 ### Toca rotar la figura para poder ver el plano
-fig %>% add_surface(z = ~z2, opacity = 0.98,colorscale = list(c(0,1),c("rgb(255,112,184)","rgb(120,0,64)"))) %>% layout(title="Poblacional (azul y verde) vs Un Individuo (Rosa)")
-#fig <- plot_ly(x = PIB, y = Desempleo, z = z) %>% add_surface()
-#fig
+fig %>% add_surface(z = ~z2, opacity = 0.98,colorscale = list(c(0,2),c("rgb(255,112,184)","rgb(120,0,64)"))) %>% layout(title="Poblacional (azul y verde) vs Un Individuo (Rosa)")
+data_surface$NIT = empresas_train[20]
+z3 = predict(mod_me, newdata = data_surface)
+z3 = matrix(z3, nrow = 50, ncol = 50)
+
+### Toca rotar la figura para poder ver el plano
+fig %>% add_surface(z = ~z3, opacity = 0.98,colorscale = list(c(0,2),c("rgb(255,112,184)","rgb(220,100,164)"))) %>% layout(title="Poblacional (azul y verde) vs Un Individuo (Rosa)")
+
 
 ```
  
