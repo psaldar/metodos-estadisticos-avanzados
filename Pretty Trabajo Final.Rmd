@@ -71,7 +71,7 @@ Donde t era el año. Así, se obtuvieron Costos_de_ventas_dif para los años 201
 
 NOTA: A pesar de que en este trabajo los modelos que usamos son solo para el costo de ventas, aplicamos la misma transformación para el gasto de ventas para los análisis descriptivos.
 
-Los valores para las variables macroeconómicas (variables explicativas) se extrajeron del Banco de la República y de la DANE. Se descargaron archivos de Excel para cada una de las variables macro. 
+Los valores para las variables macroeconómicas (variables explicativas) se extrajeron del Banco de la República y de el DANE. Se descargaron archivos de Excel para cada una de las variables macro. 
 Algunas de estas variables macro ya venían como variación porcentual entre un año y el otro. Sin embargo, otras no venían de esta manera. A continuación, detallamos la forma final en la que quedaría cada una de las variables (luego de nuestro preprocesamiento interno en scripts de Python).
 
 * PIB: variación porcentual del PIB total entre un año y otro
@@ -88,10 +88,11 @@ Algunas de estas variables macro ya venían como variación porcentual entre un 
 
 * Inflación: tasa de inflación anual
 
-Nota: 
-- Se menciona que, ya posteriormente en este reporte de R, se aplica una transformación de log(1+X) para todas las variables (tanto para las de salida como para las de entrada). Esto es para poder aportarle interpretabilidad a los modelos de regresión (los coeficientes de las regresiones representarán los cambios porcentuales en la variable de salida que se tendrán al cambiar en porcentaje las variables explicativas).
+Se hacen un par de aclaraciones: 
 
-- Todas las variables se muestran como un valor real, a pesar de que algunas de ellas representen porcentajes. Esto quiere decir por ejemplo que una variable cómo la variación porcentual del PIB tomaría el valor de 0.07 para representar un porcentaje del 7%. 
+* Se menciona que, ya posteriormente en este reporte de R, se aplica una transformación de log(1+X) para todas las variables (tanto para las de salida como para las de entrada). Esto es para poder aportarle interpretabilidad a los modelos de regresión (los coeficientes de las regresiones representarán los cambios porcentuales en la variable de salida que se tendrán al cambiar en porcentaje las variables explicativas).
+
+* Todas las variables se muestran como un valor real, a pesar de que algunas de ellas representen porcentajes. Esto quiere decir por ejemplo que una variable cómo la variación porcentual del PIB tomaría el valor de 0.07 para representar un porcentaje del 7%. 
 
 
 
@@ -564,8 +565,7 @@ adj_r2_score <- function(x, y) summary(lm(y~x))$adj.r.squared
 
 ## Modelos para los Costos de venta
 
-En esta sección, se usan un par de modelos (modelo lineal general y modelo lineal con efectos mixtos) para modelar la variable de Costos_de_venta_dif como una regresión de las variables macroeconómicas (todas ya transformadas, para que sea una regresión log-log).
-
+En esta sección, se usan un par de modelos (modelo lineal general y modelo lineal con efectos mixtos) para modelar la variable de Costos_de_venta_dif como una regresión de las variables macroeconómicas (todas ya transformadas, para que sea una regresión log-log). De igual forma, se aclara que cuando se creen los plots para medir ajuste y capacidad predictiva (los que comparan los valores predichos contra los reales), se aplica una transformación para poder retornar la variable de salida para que representa las variaciones porcentuales (y no su logaritmo). Para esto, lo que se hace es obtener el exponencial de la salida predicha, y a ese valor se le resta 1, logrando así recuperar la escala de la variable para que sea una variación porcentual anual en los gráficos.
 
 
 ### Modelo Lineal General
@@ -585,9 +585,9 @@ mod_lin = lm('Costo.de.ventas_dif~PIB', data = data_train_z)
 summary(mod_lin)
 ```
 
-En este caso el modelo está siendo exclusivamente dependiente de la dinámica del PIB, y se tiene que un aumento en un 1% en la variación porcentual del PIB anual tiene un impacto positivo de hasta 12.70% sobre la variación porcentual de los costos de venta, lo cual es razonable, en particular porque, al percibir mayor crecimiento en la economía global, la industria naturalmente también se ve afectada al haber mayor producción y un mayor retorno de dinero; no obstante, las dinámicas de las compañías que componen la industria muchas veces se ven influenciada por el factor macro más global de manera diferentes, ello por su tamaño o tendencias, así que probablemente sea necesario modelar dichos efectos de una forma más robusta. Esta dinámica explicada también tiene sentido para el sector particular analizado (el de la construcción): un aumento de la economía global (PIB) está relacionado con un crecimiento global de las empresas de la construcción, al ser más grandes las empresas es normal que tengan mayores ingresos (por ventas de materiales contrucción o por proyectos de construcción) y eso conlleva también a que tengan mayores costos.
+En este caso el modelo está siendo exclusivamente dependiente de la dinámica del PIB, y se tiene que un aumento de un 1% en la variación porcentual del PIB anual conllevaría a un aumento de 12.71% sobre la variación porcentual de los costos de venta, lo cual es razonable, en particular porque, al percibir mayor crecimiento en la economía global, la industria naturalmente también se ve afectada al haber mayor producción y un mayor retorno de dinero; no obstante, las dinámicas de las compañías que componen la industria muchas veces se ven influenciada por el factor macro más global de manera diferentes, ello por su tamaño o tendencias, así que probablemente sea necesario modelar dichos efectos de una forma más robusta. Esta dinámica explicada también tiene sentido para el sector particular analizado (el de la construcción): un aumento de la economía global (PIB) está relacionado con un crecimiento global de las empresas de la construcción, al ser más grandes las empresas es normal que tengan mayores ingresos (por ventas de materiales contrucción o por proyectos de construcción) y eso conlleva también a que tengan mayores costos.
 
-NOTA: se hace una aclaración aquí para evitar confusiones. Cuando se dice que "aumento en un 1% en la variación porcentual del PIB anual tiene un impacto positivo de hasta 12.70%", el aumento del 1% hace referencia a aumentar 1% de la variación porcentual, no sumarle 1% a esta. Esto quiere decir entonces que, si por ejemplo se tiene una variación porcentual anual del 5%, el aumento del 1% mencionado haría referencia en aumentar 5% en un 1% de si mismo (5% + 5%/100). Esto no se debe confundir con aumentar 5% y sumarle un 1% y llegar a 6%, ya que este sería un caso distinto y no es el caso analizado en la regresión log-log.
+NOTA: se hace una aclaración aquí para evitar confusiones. Cuando se dice que "aumento de un 1% en la variación porcentual del PIB anualconllevaría a un aumento de 12.71%", el aumento del 1% hace referencia a aumentar 1% de la variación porcentual, no sumarle 1% a esta. Esto quiere decir entonces que, si por ejemplo se tiene una variación porcentual anual del 5%, el aumento del 1% mencionado haría referencia en aumentar 5% en un 1% de si mismo (5% + 5%/100). Esto no se debe confundir con aumentar 5% y sumarle un 1% y llegar a 6%, ya que este sería un caso distinto y no es el caso analizado en la regresión log-log.
 
 
 #### Desempeño del Modelo Entrenado
@@ -608,7 +608,7 @@ mse_model<-mean((data_train_z$Costo.de.ventas_dif - preds)^2)
 plot(lapply(preds, function(x) exp(x) - 1),  
      lapply(data_train_z$Costo.de.ventas_dif, function(x) exp(x) - 1), 
      xlab = 'Valor predicho', ylab = 'Valor real', 
-     main='Modelo Lineal General (a escala porcentual)')#, sub = sub_tit)
+     main='Modelo Lineal General (variación porcentual anual)')#, sub = sub_tit)
 abline(a=0, b=1, lwd = 2, col = 'red')
 ```
 
@@ -648,7 +648,7 @@ sub_tit = paste("R2", format(r2_model, digits=2, nsmall=2),
 
 plot(lapply(preds_test, function(x) exp(x) - 1), 
      lapply(data_test_z$Costo.de.ventas_dif, function(x) exp(x) - 1), 
-     xlab = 'Valor predicho', ylab = 'Valor Real', main='Modelo Lineal General (a escala porcentual)')#, sub=sub_tit)
+     xlab = 'Valor predicho', ylab = 'Valor Real', main='Modelo Lineal General (variación porcentual anual)')#, sub=sub_tit)
 abline(a=0, b=1, lwd = 2, col = 'red')
 ```
 ```{r echo=FALSE}
@@ -663,7 +663,7 @@ kable(measures)%>%
 
 La aplicación sobre el conjunto de prueba mostrada genera resultados muy similares a aquellos sobre el de entrenamiento. La capacidad predictiva es también considerablemente baja (al igual que el ajuste), lo cual es esperado, debido a la separación natural de las tendencias de las empresas y a la falta de la modelación del efecto del indicador sobre la medida de estudio; no obstante, el modelo entrega valores que se mantienen en un rango conservador, es decir, no genera estimaciones imposibles que efectivamente pudieran alcanzarse bajo reducciones en las cuentas de costos de ventas.
 
-Adicionalmente, al ver las métricas obtenidas por este modelo en el conjunto de prueba comprobamos también que su capacidad predictiva es muy pobre: el MSE es de 0.1805 (más adelante veremos que se puede reducir mucho), mientras que el R2 y el R2 ajustado son muy bajos (0.0083 y -0.0237 respectivamente).
+Adicionalmente, al ver las métricas obtenidas por este modelo en el conjunto de prueba comprobamos también que su capacidad predictiva es muy pobre: el MSE es de 0.1802, mientras que el R2 y el R2 ajustado son muy bajos (0.0083 y -0.0237 respectivamente).
 
 
 Observando ya las cifras predichas, vemos que las predicciones en el conjunto de ajuste oscilan desde -0.15 hasta -0.06, lo que muestra que están generando predicciones razonables (cercanas a la media al no tener mucha más capacidad de mejor), teniendo en cuenta la media de (-0.03) y desviación estandar (0.27) de la variable de respuesta (sin transformación logarítmica), las cuáles fueron presentadas en el análisis descriptivo. Estas predicciones se puede decir que son acordes con el sentido común (predicen una disminución porcentual de costos entre 5% y 15%, el cuál es un valor factible). Es de notar que las cifras predichas son exactamente iguales a las predichas en el conjunto de entrenamiento, ya que las variables que el modelo ve en train y en test son las mismas (solo los 3 valores únicos del PIB, los cuáles ve de forma repetida en varias ocasiones). Sin embargo, obviamente las métricas obtenidas son distintas ya que las cifras reales de las observaciones de los conjuntos de entrenamiento y prueba sí son distintas.
@@ -683,7 +683,7 @@ mod_plot = plot(mod_lin, which = c(1:6))
 
 
 
-De los gráficos anteriores, en particular analizando el valor de la distancia de Cook para las observaciones, notamos que las observaciones 17, 30, 52 son candidatas a ser registros atípicos en el conjunto de datos, por lo que entrenaremos un nuevo modelo eliminando estos registros. Notar que los outliers corresponden a la empresa con NIT 890909034 para el 2016, y para la empresa 800236890 en los periodos del 2017 y 2018, información que se contrasta con los outliers obtenidos en el boxplot, lo cual están incluidos tanto mirando la variable de diferencia costos de venta. En vista de su comportamiento raro en magnitud según el boxplot, no es de extrañarse que estos registros hayan sido aquellos con la distancia de Cook mas grande. 
+De los gráficos anteriores, en particular analizando el valor de la distancia de Cook para las observaciones, notamos que las observaciones 17, 30, 52 son candidatas a ser registros atípicos en el conjunto de datos. Notar que los outliers corresponden a la empresa con NIT 890909034 para el 2016, y para la empresa 800236890 en los periodos del 2017 y 2018, información que coincide con algunos de los outliers obtenidos en el boxplot. En vista de su comportamiento raro en magnitud según el boxplot, no es de extrañarse que estos registros hayan sido aquellos con la distancia de Cook mas grande.
 
 
 
@@ -714,10 +714,10 @@ mod_me = lmer('Costo.de.ventas_dif~Desempleo+PIB+(0+Desempleo|NIT)+(PIB|NIT)', d
 summary(mod_me)
 ```
 
-Para este modelo de efectos mixtos, observando primero la componente de los efectos fijos, vemos que un incremento en un 1% de la variación del PIB anual del pais, refleja un aumento en un 12.63% en la diferencia de los costos de venta anuales de las empresas, mientras que al ver un cambio de un 1% en el desempleo, este disminuye la diferencia de los costos en un 1.2765%. Dichos resultados son completamente razonables en la realidad por el argumento previamente expuesto sobre el efecto del crecimiento del PIB en la variación de los costos al presentarse mayor producción que genera incrementos en los retornos de dinero. Por otro lado, una relación negativa entre el desempleo y la diferencia de costos de venta claramente tiene sentido ya que al presentarse mayor desempleo se tendrá una mano de obra más barata lo que reduce los gastos y de forma indirecta los costos. Aquí es importante notar como la tasa de crecimiento potencial asociada al crecimiento de productividad debe, en teoría, mantenerse en línea con una reducción con la tasa de desempleo.
+Para este modelo de efectos mixtos, observando primero la componente de los efectos fijos, vemos que un incremento en un 1% de la variación del PIB anual del pais, reflejaría un aumento en un 12.63% en la variación porcentual de los costos de venta anuales de las empresas. Por otro lado, al ver un aumento de un 1% en la tasa de desempleo, se disminuiría la variación porcentual de los costos de venta en un 1.2765%. Dichos resultados son completamente razonables en la realidad por el argumento previamente expuesto sobre el efecto del crecimiento del PIB en la variación de los costos: al presentarse mayor crecimiento económica, es usual que las empresas tengan en general mayores ingresos y esto suele conllevar a más costos. Por otro lado, una relación negativa entre el desempleo y la diferencia de costos de venta claramente tiene sentido ya que al presentarse mayor desempleo se tendrá una mano de obra más barata lo que reduce los gastos y de forma indirecta los costos. Aquí es importante notar como la tasa de crecimiento potencial asociada al crecimiento de productividad debe, en teoría, mantenerse en línea con una reducción con la tasa de desempleo.
 
 
-Ahora, si miramos las varianzas estimadas para los efectos aleatorios, podemos ver que tanto PIB como Desempleo tienen varianzas considerables teniendo en cuenta la escala de los datos: 3.58 para Desempleo y 0.57 para PIB (a del intercepto no parece ser muy considerable). Esto nos demuestra lo que esperábamos: el componente aleatorio juega un papel muy importante en este caso ya que cada empresa tiene una dinámica muy particular y por ende el modelo le da un buen peso a los efectos aleatorios. Vemos entonces que el PIB y el desempleo afectan de manera muy diferente y particular a cada empresa. Además, pareciera verse que la forma en la que el desempleo afecta a cada empresa es mucho más notoria y particular y de mayor peso que el efecto que tiene el PIB en cada empresa (ya que la varianza del desempleo en los efectos aleatorios es mucho mayor a la del PIB).
+Ahora, si miramos las varianzas estimadas para los efectos aleatorios, podemos ver que tanto PIB como Desempleo tienen varianzas considerables teniendo en cuenta la escala de los datos: 3.58 para Desempleo y 0.57 para PIB (la varianza del intercepto no parece ser muy notable). Esto nos demuestra lo que esperábamos: el componente aleatorio juega un papel muy importante en este caso ya que cada empresa tiene una dinámica muy particular y por ende el modelo le da un buen peso a los efectos aleatorios. Vemos entonces que el PIB y el desempleo afectan de manera muy diferente y particular a cada empresa. Además, pareciera verse que la forma en la que el desempleo afecta a cada empresa es mucho más notoria y particular y de mayor peso que el efecto que tiene el PIB en cada empresa (ya que la varianza del desempleo en los efectos aleatorios es mucho mayor a la del PIB).
 
 
 
@@ -736,7 +736,7 @@ mse_model<-mean((data_train_z$Costo.de.ventas_dif - preds)^2)
 
 plot(lapply(preds, function(x) exp(x) - 1),
      lapply(data_train_z$Costo.de.ventas_dif, function(x) exp(x) - 1), 
-     main='Modelo de Efectos Mixtos (a escala porcentual)', #sub = sub_tit,
+     main='Modelo de Efectos Mixtos (variación porcentual anual)', #sub = sub_tit,
      xlab = 'Valor predicho', ylab = 'Valor Real')
 abline(a=0, b=1, lwd = 2, col = 'red')
 ```
@@ -767,7 +767,7 @@ a cero son compañías cuyos costos de ventas disminuyeron más de lo que se esp
 Se considera entonces que las predicciones obtenidas por el modelo en el conjunto de entrenamiento son razonables, ya que vemos que sus predicciones están todas entre -0.4 y 0.1, lo cual denota valores factibles en los cuales podría oscilar la variación porcentual de las empresas (tener reducciones máximas de 40% o incrementos de 10%), lo cuál es consistente con la media de -0.03 que habíamos calculado para la variable explicativa (en promedio, hay una disminución en cada año en los costos de ventas de las empresas tomadas). Además, se observa una gran variabilidad en las predicciones debido a la existencia de efectos aleatorios, algo que se esperaba ver en este modelo de efectos mixtos.
 
 
-Adicionalmente, al ver las métricas obtenidas por este modelo en el conjunto de entrenamiento comprobamos que el ajuste realizado por este modelo es mucho más decente que el del modelo lineal general: tuvo un R2 de 0.4016 el cual representa un ajuste decente (el del lineal general era casi de 0). Además su R2 ajustado fue de a 0.3922 (decente). Por último, su MSE fue de 0.1557, lo cuál representa una mejora muy considerable en comparación al MSE del conjunto de entrenamiento del modelo lineal general que era de 0.2025. Estos resultados indican que, tal como se esperaba, el modelo de efectos mixtos logra realizar un ajuste mucho mejor al incluir los efectos particulares de cada empresa.
+Adicionalmente, al ver las métricas obtenidas por este modelo en el conjunto de entrenamiento comprobamos que el ajuste realizado por este modelo es mucho más decente que el del modelo lineal general: tuvo un R2 de 0.4016 el cual representa un ajuste decente (el del lineal general era casi de 0). Además su R2 ajustado fue de a 0.3923 (decente). Por último, su MSE fue de 0.1558, lo cuál representa una mejora muy considerable en comparación al MSE del conjunto de entrenamiento del modelo lineal general que era de 0.2025. Estos resultados indican que, tal como se esperaba, el modelo de efectos mixtos logra realizar un ajuste mucho mejor al incluir los efectos particulares de cada empresa.
 
 
 
@@ -787,7 +787,7 @@ sub_tit = paste("R2", format(r2_model, digits=2, nsmall=2),
 
 plot(lapply(preds, function(x) exp(x) - 1),
      lapply(data_test_z$Costo.de.ventas_dif, function(x) exp(x) - 1),
-     main='Modelo de Efectos Mixtos (a escala porcentual)', xlab = 'Valor predicho', ylab = 'Valor Real')#, sub=sub_tit)
+     main='Modelo de Efectos Mixtos (variación porcentual anual)', xlab = 'Valor predicho', ylab = 'Valor Real')#, sub=sub_tit)
 abline(a=0, b=1, lwd = 2, col = 'red')
 ```
 
