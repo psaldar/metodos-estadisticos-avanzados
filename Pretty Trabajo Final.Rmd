@@ -145,7 +145,7 @@ Damos una visualizacion inicial al conjunto de datos con el que se va a trabajar
 ```{r echo=FALSE}
 data = all_data[, -c(1,2)]
 
-ref_ds=round( all_data[, -c(2)],2)
+ref_ds=round( all_data[, -c(2)],4)
 col_order_data <- c("NIT", "Costo.de.ventas", "Gastos.de.ventas", "Costo.de.ventas_dif", "Gastos.de.ventas_dif", "Costo.de.ventas_dif_sinlog", "Gastos.de.ventas_dif_sinlog", "TRM" ,"PIB", "Desempleo",  "Inflacion", "Tasa_Intervencion", "Balance_CC", "Balance_Fiscal")
 ref_ds <- ref_ds[, col_order_data]
 
@@ -167,7 +167,8 @@ kable(ref_ds, digits = 4) %>%
   scroll_box("100%", height = "250px")
 ```
 
-En la siguiente tabla, vemos información descriptiva de las variables que se considerarán en la etapa de modelamiento del trabajo, vemos así que contamos con un total de 11 variables, cada una con magnitudes diferentes. Esto nos permite tener una idea inicial de las características del conjunto de datos.
+En la siguiente tabla, vemos información descriptiva de las variables que se considerarán en la etapa de modelamiento del trabajo, vemos así que contamos con un 6 posibles variables respuesta y 7 variables explicativas
+, cada una con magnitudes diferentes. Esto nos permite tener una idea inicial de las características del conjunto de datos.
 
 ```{r echo=FALSE}
 col_order_data <- c("Costo.de.ventas", "Gastos.de.ventas", "Costo.de.ventas_dif", "Gastos.de.ventas_dif", "Costo.de.ventas_dif_sinlog", "Gastos.de.ventas_dif_sinlog", "TRM" ,"PIB", "Desempleo",  "Inflacion", "Tasa_Intervencion", "Balance_CC", "Balance_Fiscal")
@@ -365,7 +366,9 @@ Ahora, habiendo ya analizado las distribuciones de las variables, pasemos entonc
 
 
 Miramos entonces las matrices de Covarianza y Correlación para tener una intuición de la variabilidad de la información que consideramos.
+
 #### Matriz de Covarianzas
+
 ```{r}
 cov_data = cov(data[,col_order_data])
 kable(formatC(cov_data,format = "e", digits = 2)) %>%
