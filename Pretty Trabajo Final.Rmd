@@ -144,8 +144,8 @@ Damos una visualizacion inicial al conjunto de datos con el que se va a trabajar
 data = all_data[, -c(1,2)]
 
 ref_ds=round(data,2)
-col_order <- c("Costo.de.ventas", "Gastos.de.ventas", "Costo.de.ventas_dif", "Gastos.de.ventas_dif", "Costo.de.ventas_dif_sinlog", "Gastos.de.ventas_dif_sinlog", "TRM" ,"PIB", "Desempleo",  "Inflacion", "Tasa_Intervencion", "Balance_CC", "Balance_Fiscal")
-ref_ds <- ref_ds[, col_order]
+col_order_data <- c("Costo.de.ventas", "Gastos.de.ventas", "Costo.de.ventas_dif", "Gastos.de.ventas_dif", "Costo.de.ventas_dif_sinlog", "Gastos.de.ventas_dif_sinlog", "TRM" ,"PIB", "Desempleo",  "Inflacion", "Tasa_Intervencion", "Balance_CC", "Balance_Fiscal")
+ref_ds <- ref_ds[, col_order_data]
 
 ref_ds$Costo.de.ventas <- currency(ref_ds$Costo.de.ventas, digits = 0L)
 ref_ds$Gastos.de.ventas	 <- currency(ref_ds$Gastos.de.ventas, digits = 0L)
@@ -166,7 +166,10 @@ kable(ref_ds) %>%
 En la siguiente tabla, vemos información descriptiva de las variables que se considerarán en la etapa de modelamiento del trabajo, vemos así que contamos con un total de 11 variables, cada una con magnitudes diferentes. Esto nos permite tener una idea inicial de las características del conjunto de datos.
 
 ```{r echo=FALSE}
-summary_df = stat.desc(data)
+
+data_summ <- data[, col_order_data]
+
+summary_df = stat.desc(data_summ)
 kable(summary_df) %>%
   kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
   scroll_box("100%", height = "580px")
@@ -341,7 +344,7 @@ Ahora, habiendo ya analizado las distribuciones de las variables, pasemos entonc
 
 #### Matriz de Covarianzas
 ```{r}
-cov_data = cov(data)
+cov_data = cov(data[,col_order_data])
 kable(formatC(cov_data,format = "e", digits = 2)) %>%
   kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
   scroll_box("100%", height = "480px")
@@ -349,7 +352,7 @@ kable(formatC(cov_data,format = "e", digits = 2)) %>%
 
 #### Matriz de Correlación
 ```{r}
-cor_data = cor(data)
+cor_data = cor(data[,col_order_data])
 kable(round(cor_data,2)) %>%
   kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
   scroll_box("100%", height = "480px")
@@ -384,13 +387,19 @@ panel.hist <- function(x, ...)
     h <- hist(x, plot = FALSE)
     breaks <- h$breaks; nB <- length(breaks)
     y <- h$counts; y <- y/max(y)
-    rect(breaks[-nB], 0, breaks[-1], y, col = "black", ...)
+    rect(breaks[-nB], 0, breaks[-1], y, col = "blue", ...)
 }
 ```
 
 ```{r fig.align='center'}
-pairs(data,diag.panel = panel.hist, lower.panel = panel.cor)
+names(data)
+
+vars = c("Costo.de.ventas_dif","TRM","PIB","Inflacion","Desempleo","Tasa_Intervencion", "Balance_CC", "Balance_Fiscal" )
+pairs(data[,vars],labels = vars,font.labels = 2,diag.panel = panel.hist, lower.panel = panel.cor)
+
 ```
+
+En el grafico anterior, podemos ver la información de la distribución de las variables en niveles que se utilizan en el trabajo, vemos entonces que existen correlaciones fuertes entre las variables macro-económicas, (tal como nos lo habia indicado la matriz de correlación), pero adicional a esto, es claro que aquella variable que tiene una mayor variabilidad es la relacionada a la diferencia relativa de los costos de venta, pues observamos que para las variables macro-económicas sólo se tienen 3 barras en su histograma, lo cual se debe a que sólo contamos con la información de 3 años, la cual es la misma para todos ls individuos (empresas) que estamos considerando en este trabajo. 
 
 ### Visualización de los datos según curvas de normalidad
 
@@ -436,26 +445,24 @@ grafica = function(data, name1, name2){
 ```
 
 ```{r fig.align='center'}
-p1 = grafica(data, "Costo.de.ventas_dif", "PIB")
+p1 = grafica(all_data, "Costo.de.ventas_dif", "PIB")
 ```
 
 ```{r fig.align='center'}
-p2 = grafica(data, "Costo.de.ventas_dif", "TRM")
+p2 = grafica(all_data, "Costo.de.ventas_dif", "TRM")
 ```
 
 ```{r fig.align='center'}
-p3 = grafica(data, "Costo.de.ventas" , "Costo.de.ventas_dif")
+p3 = grafica(all_data, "Costo.de.ventas" , "Costo.de.ventas_dif")
 ```
 
 ```{r fig.align='center'}
-p4 = grafica(data, "Gastos.de.ventas" , "Gastos.de.ventas_dif")
+p4 = grafica(all_data, "Costo.de.ventas" , "Costo.de.ventas_dif_sinlog")
+
 ```
 
-```{r fig.align='center'}
-p5 = grafica(data, "Costo.de.ventas_dif" , "Gastos.de.ventas_dif")
-```
 
-ANALISIS DE CONTORNOS
+Las gráficas anteriores, nos permiten ver el comportamiento de la distribución de dos variables, además de tener como referencia los contornos de una distribución normal bivariada. De estos gráficos, podemos concluir que aquellos pares de variables graficados, no son candidatas para afirmar que pueden seguir una distribución normal, pues claramente tenemos registros dentro del conjunto de datos que en particula tienen o valores bastante grandes en magnitud que caen por fuera de las regiones de normalidad. De igual manera, al considerar las dos variables macro-económicas incluidas (el PIB y la TRM), justo por la característica de las mismas en el conjunto de datos (tener sólo valores para 3 años), no nos dan información acerca de la dispersión de la variable, por el contrario, tiene un efecto en las gráficas de contorno, enfocando los datos en 3 lineas (una para cada año) y posteriormente incluir la variabilidad anual del logaritmo de la diferencia de los costos de venta. Nuevamente por la magnitud  de alguno de los valores en la variable explicativa, vemos que encontramos puntos de los indivuduos que caen por fuera de la región de normalidad, por lo tanto tampoco podemos concluir normlidad bivariada entre estas variables.
 
 
 
@@ -804,6 +811,11 @@ De las gráficas obtenidas al momento de realizar la superficie del comportamien
 
 
 # Conclusiones
+
+* Debido a las características del conjunto de datos que estabamos utilizando (además de tener información limitada a 3 años), vemos que no es posible tener una buena capacidad predictiva en los modelos considerados, sin embargo, se puede apreciar que al realizar interpretación  de la estructura del modelo (inferencia), vemos que tiene sentido tanto que el PIB tenga una relación positiva como el Desempleo una relación negativa al momento de querer explicar la variación anual en los costos de venta de las empresas.
+
+* Al tener poca información histórica (información de 3 años) pero contar con un número considerable de individuos (empresas) en el análsis, vemos que efectivamente el modelo más conveniente para ser utilizado es el modelo de efectos mixtos, pues vemos que podemos obtener un comportamiento promedio para la variación anual de la diferencia de costos de venta, pero es claro que el comportamiento en el mercado de cada una de las empresas es diferentes, por lo que al considerar los efectos aleatorios con el modelo de efecto mixto, obtenemos un modelo más realista al momento de hacer inferencia e interpretación, pues es posible tener diferentes aumentos anuales para las empresas dadas las mismas variables macro-económicas.
+
 
 
 # Referencias 
