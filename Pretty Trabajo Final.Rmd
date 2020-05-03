@@ -89,7 +89,9 @@ Desempleo: tasa de desempleo promedio durante el año (como ya era porcentaje, s
 
 Inflación: tasa de inflación anual
 
-Nota: se menciona que, ya posteriormente en este reporte de R, se aplica una transformación de log(1+X) para todas las variables (tanto para las de salida como para las de entrada). Esto es para poder aportarle interpretabilidad a los modelos de regresión (los coeficientes de las regresiones representarán los cambios porcentuales en la variable de salida que se tendrán al cambiar en porcentaje las variables explicativas).
+Nota: 
+- se menciona que, ya posteriormente en este reporte de R, se aplica una transformación de log(1+X) para todas las variables (tanto para las de salida como para las de entrada). Esto es para poder aportarle interpretabilidad a los modelos de regresión (los coeficientes de las regresiones representarán los cambios porcentuales en la variable de salida que se tendrán al cambiar en porcentaje las variables explicativas).
+- aquellas variables que indiquen variación porcentual se representarán en su forma absoluta, es decir, un valor de 7% se presenta como 0.07.
 
 
 
@@ -140,7 +142,11 @@ Damos una visualizacion inicial al conjunto de datos con el que se va a trabajar
 
 ```{r echo=FALSE}
 data = all_data[, -c(1,2)]
+
 ref_ds=round(data,2)
+col_order <- c("Costo.de.ventas", "Gastos.de.ventas", "Costo.de.ventas_dif", "Gastos.de.ventas_dif", "Costo.de.ventas_dif_sinlog", "Gastos.de.ventas_dif_sinlog", "TRM" ,"PIB", "Desempleo",  "Inflacion", "Tasa_Intervencion", "Balance_CC", "Balance_Fiscal")
+ref_ds <- ref_ds[, col_order]
+
 ref_ds$Costo.de.ventas <- currency(ref_ds$Costo.de.ventas, digits = 0L)
 ref_ds$Gastos.de.ventas	 <- currency(ref_ds$Gastos.de.ventas, digits = 0L)
 ref_ds$TRM<- percent(ref_ds$TRM, format = "d", digits = 2L)
@@ -150,6 +156,8 @@ ref_ds$Inflacion<- percent(ref_ds$Inflacion, format = "d", digits = 2L)
 ref_ds$Tasa_Intervencion<- percent(ref_ds$Tasa_Intervencion, format = "d", digits = 2L)
 ref_ds$Balance_CC<- percent(ref_ds$Balance_CC, format = "d", digits = 2L)
 ref_ds$Balance_Fiscal<- percent(ref_ds$Balance_Fiscal, format = "d", digits = 2L)
+
+
 kable(ref_ds) %>%
   kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T, font_size = 12)%>%
   scroll_box("100%", height = "250px")
@@ -165,7 +173,7 @@ kable(summary_df) %>%
 
 ```
 
-Además de la información descriptiva presentada en la tabla anterior, podemos ver para cada una de las variables y su distribución de forma visual con la ayuda de la creación de histogramas de frecuencia. Recordemos que en este caso las variables costos y gastos de venta son las variables originales en niveles, mientras que las variables Costos y Gastos de venta dif son las transformaciones logarítimicas de las variaciones porcentuales de dichas variables.
+Además de la información descriptiva presentada en la tabla anterior, podemos ver para cada una de las variables y su distribución de forma visual con la ayuda de la creación de histogramas de frecuencia. Recordemos que en este caso las variables costos y gastos de venta son las variables originales con sus respectivas magnitudes, aquellas indicadas con el posfijo _dif_sinlog son la variación porcentual previamente expuesta y finalmente las marcadas como _dif son las transformaciones logarítimicas de las variaciones porcentuales de dichas variables.
 
 ```{r fig.align='center', echo = FALSE}
 plot1 = ggplot(data, aes(x=Costo.de.ventas)) + 
@@ -200,20 +208,28 @@ Vamos a obtener la informacion relacionada a las medidas de centralidad y disper
 ### Vector de Medias y Medianas
 
 ```{r, echo = FALSE}
-mean_data = colMeans(data)
-median_data = colMedians(as.matrix(data))
-names(mean_data) = names(data)
-names(median_data) = names(data)
+mean_data = as.data.frame(colMeans(data))
+median_data = as.data.frame(colMedians(as.matrix(data)))
+
+colnames(mean_data) = c('Media')
+colnames(median_data) = c('Mediana')
+
+mean_data$Variable <- rownames(mean_data)
+median_data$Variable <- rownames(mean_data)
+
+col_order <- c("Variable", "Media", "Mediana")
+
+res_data<-merge(x=mean_data,y=median_data,by="Variable")
+res_data <- res_data[, col_order]
 
 kable(
-  list(
-    mean_data,
-    median_data
-  ),
+  res_data,
   caption = 'Media y Mediana',
   booktabs = TRUE, valign = 't'
 ) %>%
-  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
+  scroll_box("100%", height = "500px")
+
 ```
 ### Boxplot para variables absolutas
 
@@ -660,6 +676,21 @@ plot(lapply(preds, function(x) exp(x) - 1),
      xlab = 'Valor predicho', ylab = 'Valor Real')
 abline(a=0, b=1, lwd = 2, col = 'red')
 ```
+
+Bajo esta aplicación de efectos mixtos es claro como se presenta una mejor distribución 
+de los valores predichos contra los reales y éste es un comportamiento más natural y 
+razonable en la industria en comparación al obtenido con el lineal generalizado, 
+donde si bien hay unas compañías que se alejan del común respecto a las diferencias en los costos de venta, 
+el resto permanece en escalas de entre -0.2% y 0.1% con una variedad muy interesante ya que
+evidencia el efecto distribuido tanto del PIB como del desempleo en las variaciones
+de los costos de ventas en una serie de compañías que seguramente permanecen estables
+en el mercado. Respecto a las compañías que se hayan por fuera del intervalo se tienen
+dos clases, por un lado aquellos cuyos valores reales son menores
+a cero son compañías cuyo concepto de costos de ventas disminuyeron más de lo normal en el
+período actual, y por otro lado (bajo la selección de compañías en entrenamiento)
+donde los valores reales fueron considerablemente superiores a los estimados, lo que
+refleja compañías cuyos costos de venta superaron la expectativa en el período actual.
+
 
 ```{r echo=FALSE}
 Medidas = c("r2 train", "r2 adj train", "mse train") 
