@@ -140,47 +140,63 @@ Cabe mencionar que al momento de realizar las interpretaciones de los resultados
 
 
 ## Análisis descriptivo
-Damos una visualizacion inicial al conjunto de datos con el que se va a trabajar. Las variables de salida con sufijo _dif representan la variación porcentual ya con la transformada del logaritmo, las variables de salida sin sufijo son las variables originales en niveles y las variables de salida con sufijo _dif_sinlog representan las variaciones porcentuales anuales (sin aplicar aún la transformada del logaritmo). También se recuerda que ya se aplicó la transformación del logaritmo para todas la variables explicativas presentadas aquí y en las siguientes secciones.
+Damos una visualizacion inicial al conjunto de datos con el que se va a trabajar:
 
-Tener en cuenta que en la tabla siguiente, las primeras 33 observaciones son para el año 2016, las siguientes 33 para el año 2017 y las últimas 33 para el año 2018.
-
-```{r}
+```{r echo=FALSE}
 data = all_data[, -c(1,2)]
 
-ref_ds=round(data,2)
-col_order_data <- c("Costo.de.ventas", "Gastos.de.ventas", "Costo.de.ventas_dif", "Gastos.de.ventas_dif", "Costo.de.ventas_dif_sinlog", "Gastos.de.ventas_dif_sinlog", "TRM" ,"PIB", "Desempleo",  "Inflacion", "Tasa_Intervencion", "Balance_CC", "Balance_Fiscal")
+ref_ds=round( all_data[, -c(2)],2)
+col_order_data <- c("NIT", "Costo.de.ventas", "Gastos.de.ventas", "Costo.de.ventas_dif", "Gastos.de.ventas_dif", "Costo.de.ventas_dif_sinlog", "Gastos.de.ventas_dif_sinlog", "TRM" ,"PIB", "Desempleo",  "Inflacion", "Tasa_Intervencion", "Balance_CC", "Balance_Fiscal")
 ref_ds <- ref_ds[, col_order_data]
 
 ref_ds$Costo.de.ventas <- currency(ref_ds$Costo.de.ventas, digits = 0L)
 ref_ds$Gastos.de.ventas	 <- currency(ref_ds$Gastos.de.ventas, digits = 0L)
-#ref_ds$TRM<- percent(ref_ds$TRM, format = "d", digits = 2L)
-#ref_ds$PIB<- percent(ref_ds$PIB, format = "d", digits = 2L)
-#ref_ds$Desempleo<- percent(ref_ds$Desempleo, format = "d", digits = 2L)
-#ref_ds$Inflacion<- percent(ref_ds$Inflacion, format = "d", digits = 2L)
-#ref_ds$Tasa_Intervencion<- percent(ref_ds$Tasa_Intervencion, format = "d", digits = 2L)
-#ref_ds$Balance_CC<- percent(ref_ds$Balance_CC, format = "d", digits = 2L)
-#ref_ds$Balance_Fiscal<- percent(ref_ds$Balance_Fiscal, format = "d", digits = 2L)
+ref_ds$Costo.de.ventas_dif_sinlog<- percent(ref_ds$Costo.de.ventas_dif_sinlog, format = "f", digits = 4L)
+ref_ds$Gastos.de.ventas_dif_sinlog	<- percent(ref_ds$Gastos.de.ventas_dif_sinlog	, format = "f", digits = 4L)
+ref_ds$TRM<- percent(ref_ds$TRM, format = "f", digits = 4L)
+ref_ds$PIB<- percent(ref_ds$PIB, format = "f", digits = 4L)
+ref_ds$Desempleo<- percent(ref_ds$Desempleo, format = "f", digits = 4L)
+ref_ds$Inflacion<- percent(ref_ds$Inflacion, format = "f", digits = 4L)
+ref_ds$Tasa_Intervencion<- percent(ref_ds$Tasa_Intervencion, format = "f", digits = 4L)
+ref_ds$Balance_CC<- percent(ref_ds$Balance_CC, format = "f", digits = 4L)
+ref_ds$Balance_Fiscal<- percent(ref_ds$Balance_Fiscal, format = "f", digits = 4L)
 
 
-kable(ref_ds) %>%
+kable(ref_ds, digits = 4) %>%
   kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T, font_size = 12)%>%
   scroll_box("100%", height = "250px")
 ```
 
-En la siguiente tabla, vemos información descriptiva de las variables que se considerarán en la etapa de modelamiento del trabajo. Esto nos permite tener una idea inicial de las características del conjunto de datos. Se recuerda que en los modelos nos enfocaremos solamente en la variable de salida Costo_de_ventas_dif y en cómo modelarla usando las variables explicativas. Sin embargo, se incluyen en esta parte del análisis explicativo otras variables de costos y gastos de venta.
+En la siguiente tabla, vemos información descriptiva de las variables que se considerarán en la etapa de modelamiento del trabajo, vemos así que contamos con un total de 11 variables, cada una con magnitudes diferentes. Esto nos permite tener una idea inicial de las características del conjunto de datos.
 
-```{r}
+```{r echo=FALSE}
 
 data_summ <- data[, col_order_data]
 
 summary_df = stat.desc(data_summ)
-kable(summary_df) %>%
-  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
-  scroll_box("100%", height = "580px")
+
+summary_df$Costo.de.ventas <- currency(summary_df$Costo.de.ventas, digits = 0L)
+summary_df$Gastos.de.ventas	 <- currency(summary_df$Gastos.de.ventas, digits = 0L)
+summary_df$Costo.de.ventas_dif_sinlog<- percent(summary_df$Costo.de.ventas_dif_sinlog, format = "f", digits = 4L)
+summary_df$Gastos.de.ventas_dif_sinlog	<- percent(summary_df$Gastos.de.ventas_dif_sinlog	, format = "f", digits = 4L)
+summary_df$TRM<- percent(summary_df$TRM, format = "f", digits = 4L)
+summary_df$PIB<- percent(summary_df$PIB, format = "f", digits = 4L)
+summary_df$Desempleo<- percent(summary_df$Desempleo, format = "f", digits = 4L)
+summary_df$Inflacion<- percent(summary_df$Inflacion, format = "f", digits = 4L)
+summary_df$Tasa_Intervencion<- percent(summary_df$Tasa_Intervencion, format = "f", digits = 4L)
+summary_df$Balance_CC<- percent(summary_df$Balance_CC, format = "f", digits = 4L)
+summary_df$Balance_Fiscal<- percent(summary_df$Balance_Fiscal, format = "f", digits = 4L)
+
+summary_df <- summary_df[c('min', 'max', 'range', 'median', 'mean', 'std.dev'),]
+
+kable(summary_df, digits =4) %>%
+  kable_styling(bootstrap_options = "striped", full_width = F, 
+                position = "center", fixed_thead = T)%>%
+  scroll_box("100%", height = "300px")
 
 ```
 
-Además de la información descriptiva presentada en la tabla anterior, podemos ver para cada una de las variables y su distribución de forma visual con la ayuda de la creación de histogramas de frecuencia. 
+Además de la información descriptiva presentada en la tabla anterior, podemos ver para cada una de las variables y su distribución de forma visual con la ayuda de la creación de histogramas de frecuencia. Recordemos que en este caso las variables costos y gastos de venta son las variables originales con sus respectivas magnitudes, aquellas indicadas con el posfijo _dif_sinlog son la variación porcentual previamente expuesta y finalmente las marcadas como _dif son las transformaciones logarítimicas de las variaciones porcentuales de dichas variables.
 
 ```{r fig.align='center', echo = FALSE}
 plot1 = ggplot(data, aes(x=Costo.de.ventas)) + 
@@ -210,43 +226,37 @@ plot6 = ggplot(all_data, aes(x=Gastos.de.ventas_dif_sinlog)) +
 grid.arrange(plot1, plot2, plot3, plot4, plot5, plot6 ,ncol=2, nrow=3)
 ```
 
+Vamos a obtener la informacion relacionada a las medidas de centralidad y dispersion del conjunto de datos. Inicialmente, presentamos información del vector de medias y medianas que describen la centralidad del conjunto de datos. Posteriormente, consideramos las matrices de Covarianza y Correlación para tener una intuición de la variabilidad de la información que consideramos.
+
+### Boxplot para variables absolutas
 
 
-Vamos a obtener la informacion relacionada a las medidas de centralidad y dispersion del conjunto de datos. Inicialmente, presentamos información del vector de medias y medianas que describen la centralidad del conjunto de datos. 
-
-### Vector de Medias y Medianas
-
-```{r, echo = FALSE}
-mean_data = as.data.frame(colMeans(data))
-median_data = as.data.frame(colMedians(as.matrix(data)))
-
-colnames(mean_data) = c('Media')
-colnames(median_data) = c('Mediana')
-
-mean_data$Variable <- rownames(mean_data)
-median_data$Variable <- rownames(mean_data)
-
-col_order <- c("Variable", "Media", "Mediana")
-row_order <- c("Costo.de.ventas", "Gastos.de.ventas", "Costo.de.ventas_dif", "Gastos.de.ventas_dif", "Costo.de.ventas_dif_sinlog", "Gastos.de.ventas_dif_sinlog", "TRM" ,"PIB", "Desempleo",  "Inflacion", "Tasa_Intervencion", "Balance_CC", "Balance_Fiscal")
-
-res_data<-merge(x=mean_data,y=median_data,by="Variable")
-rownames(res_data) <- res_data$Variable
-res_data <- res_data[row_order, col_order]
-
-
-
-kable(
-  select(res_data,-c("Variable")),
-  caption = 'Media y Mediana',
-  booktabs = TRUE, valign = 't'
-) %>%
-  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
-  scroll_box("100%", height = "500px")
-
+```{r fig.align='center'}
+par(mfrow=c(1,2))
+bxplot_costos = boxplot(Costo.de.ventas~Year, data = all_data)
+bxplot_gastos = boxplot(Gastos.de.ventas~Year, data = all_data)
 ```
 
-Ahora, usaremos boxplot para mostrar gráficamente y de forma clara la distribución de las variables y sus medidas de dispersión y centralidad.
+```{r}
+### Outliers para costos
+nits_tab = t(all_data[(all_data$Costo.de.ventas %in% bxplot_costos$out),]$NIT)
+rownames(nits_tab) <- c("NITs")
 
+kable(nits_tab)%>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
+  column_spec(1,bold=T)
+```
+
+```{r}
+### Outliers para gastos
+nits_tab = t(all_data[(all_data$Gastos.de.ventas %in% bxplot_gastos$out),]$NIT)
+rownames(nits_tab) <- c("NITs")
+
+kable(nits_tab)%>%
+  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
+  column_spec(1,bold=T)
+
+```
 
 ### Boxplot para variables originales (en niveles)
 
