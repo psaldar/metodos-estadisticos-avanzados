@@ -218,12 +218,16 @@ mean_data$Variable <- rownames(mean_data)
 median_data$Variable <- rownames(mean_data)
 
 col_order <- c("Variable", "Media", "Mediana")
+row_order <- c("Costo.de.ventas", "Gastos.de.ventas", "Costo.de.ventas_dif", "Gastos.de.ventas_dif", "Costo.de.ventas_dif_sinlog", "Gastos.de.ventas_dif_sinlog", "TRM" ,"PIB", "Desempleo",  "Inflacion", "Tasa_Intervencion", "Balance_CC", "Balance_Fiscal")
 
 res_data<-merge(x=mean_data,y=median_data,by="Variable")
-res_data <- res_data[, col_order]
+rownames(res_data) <- res_data$Variable
+res_data <- res_data[row_order, col_order]
+
+
 
 kable(
-  res_data,
+  select(res_data,-c("Variable")),
   caption = 'Media y Mediana',
   booktabs = TRUE, valign = 't'
 ) %>%
