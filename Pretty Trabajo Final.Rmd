@@ -105,7 +105,7 @@ NIT = all_data['NIT']
 
 ## Transformación de los Datos
 
-Para fines de intepretación de los modelos creados en el trabajo y para estabilizar un poco la varianza, consideraremos la transformación logarítmica tanto para los predictores como para la variable respuesta para poder tener un modelo de tipo log-log. Esta transformación del logaritmo también es de utilidad ya que se trabaja con porcentajes y en estos casos es usual que se presenten sesgos en la variable. De esta forma, la transformación logarítimica que se realiza es:
+Para fines de intepretación de los modelos creados en el trabajo y para estabilizar un poco la varianza, consideraremos la transformación logarítmica tanto para los predictores como para la variable respuesta para poder tener un modelo de tipo log-log, para así poder interpretar un coeficiente (beta) de la regresión como el incremento porcentual que se tendría de la variable dependiente al incrementar un 1% de la variable independiente relacionada con este coeficiente. Esta transformación del logaritmo también es de utilidad ya que se trabaja con porcentajes y en estos casos es usual que se presenten sesgos en la variable. De esta forma, la transformación logarítimica que se realiza es:
 
 $$T(x) = log(1+x) $$
 
