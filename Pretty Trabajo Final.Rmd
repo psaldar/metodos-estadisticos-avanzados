@@ -44,7 +44,7 @@ El modelamiento del comportamiento de diferentes variables es un tema que ha sid
 
 Diferentes industrias dentro de su funcionamiento, deben presentar ante la superintendencia información relacionando los gastos y ventas que presentaron anualmente. Además, se presume que del mercado colombiano, como en los procesos de las industria está esa interacción con todo el mercado, es posible pensar que exista una relación entre las diferentes variables macroeconomicas (ej. PIB, TRM, Balance Fiscal, Indice de Desempleo, etc.) y estos montos de costos y gastos de las empresas. Debido a la cantidad de información con la que se cuenta (información de costos y gastos para diferentes empresas en colombia entre los años 2016 y 2018), se sabe que no se cuenta con información suficiente para la construcción de un modelo por empresa que permita ver la relación existente entre las variables macroeconómicas y las variables asociadas a costos y gastos de ventas. Por lo anterior, es posible considerar un conjunto de datos como la consolidación de la información de todas las empresas junto con la información macroeconomica para los años en estudio, así buscando construir un modelo general para realizar la modelación de estas variables reportadas ante la superintendencia para un conjunto de empresas cuya industria sea similar.
 
-Por lo tanto, para el conjunto de datos meniconado anteriormente, se buscará modelar la información de costos y gastos de venta a partir de las variables macroeconomicas disponibles, al igual que analizar si al realizar alguna transformación a dichas variables resulta relevante al momento de la creación del modelo. Se utilizarán modelos lineales, comenzando con la evaluación del modelo lineal general, hasta la aplicación de modelos de efectos mixtos. Esta última estructura de modelos, es bastante usado al momento de tener individuos que comparten la misma información pero tienen una salida diferente (en nuestro caso, todas las empresas comparten la misma información de las variables macroeconómicas), por lo que utilizar este tipo de modelos resulta de gran interés ya que permite modelar tanto efectos a nivel de individuo como agregando un efecto aleatorio.
+De esta manera, para el conjunto de datos mencionado anteriormente, nos enfocaremos en modelar la información de costos de venta a partir de las variables macroeconómicas disponibles. Se utilizarán modelos lineales para este trabajo: se usa un modelo lineal general y un modelo de efectos mixtos. Esta última estructura de modelos es bastante usada al momento de tener individuos que comparten la misma información pero tienen una salida diferente (en nuestro caso, todas las empresas comparten la misma información de las variables macroeconómicas), por lo que utilizar este tipo de modelos resulta de gran interés ya que permite modelar tanto efectos a nivel de individuo como a nivel poblacional general.
 
 ## Clasificación Industrial Seleccionada
 
@@ -170,6 +170,7 @@ kable(ref_ds, digits = 4) %>%
 En la siguiente tabla, vemos información descriptiva de las variables que se considerarán en la etapa de modelamiento del trabajo, vemos así que contamos con un total de 11 variables, cada una con magnitudes diferentes. Esto nos permite tener una idea inicial de las características del conjunto de datos.
 
 ```{r echo=FALSE}
+col_order_data <- c("Costo.de.ventas", "Gastos.de.ventas", "Costo.de.ventas_dif", "Gastos.de.ventas_dif", "Costo.de.ventas_dif_sinlog", "Gastos.de.ventas_dif_sinlog", "TRM" ,"PIB", "Desempleo",  "Inflacion", "Tasa_Intervencion", "Balance_CC", "Balance_Fiscal")
 
 data_summ <- data[, col_order_data]
 
@@ -878,15 +879,20 @@ De las gráficas obtenidas al momento de realizar la superficie del comportamien
 
 # Referencias 
 
-* Superintendencia de Sociedades. (12 de Abril de 2020). Portal de Información Empresarial. Obtenido de http://pie.supersociedades.gov.co/: http://pie.supersociedades.gov.co/
+* Superintendencia de Sociedades. (12 de Abril de 2020). Portal de Información Empresarial. Obtenido de http://pie.supersociedades.gov.co/
 
-*Gałecki, A., & Burzykowski, T. (2013). Linear mixed-effects model. In Linear Mixed-Effects Models Using R (pp. 245-273). Springer, New York, NY.
+* Banco de la Republica (12 de Abril de 2020). Información Macroeconomica. Obtenido del Banco de la República: https://www.banrep.gov.co/es/-estadisticas
 
-*Ospina, J. D. (Abril de 2020). Clase Métodos Estadísticos Avanzados en Ciencia de los Datos. Maestría en Ciencia de los Datos y Analítica, EAFIT. Medellín, Colombia.
+* DANE. (12 de Abril de 2020). DANE Índice de Precios al Consumidor. Obtenido de DANE: https://www.dane.gov.co/index.php/estadisticas-por-tema/precios-y-costos/indice-de-precios-al-consumidor-ipc/ipc-informacion-tecnica#variaciones
+
+* Ospina, J. D. (Abril de 2020). Clase Métodos Estadísticos Avanzados en Ciencia de los Datos. Maestría en Ciencia de los Datos y Analítica, EAFIT. Medellín, Colombia.
+
+* Gałecki, A., & Burzykowski, T. (2013). Linear mixed-effects model. In Linear Mixed-Effects Models Using R (pp. 245-273). Springer, New York, NY.
+
  
 
 
-# Estimacion del esfuerzo (Anexo)
+# Estimación del esfuerzo (Anexo)
 
 Según lo pedido en el enunciado del trabajo, entregamos aquí una estimación de las horas empleadas para desarrollar este trabajo. Las horas aquí mencionadas son horas totales de trabajo (es la suma de las horas empleadas por los 3 autores del reporte).
 
