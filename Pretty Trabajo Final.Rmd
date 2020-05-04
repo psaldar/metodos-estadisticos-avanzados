@@ -36,7 +36,7 @@ library(olsrr)
 
 ### Repositorio
 
-Los diferentes análisis, preparación de datos y demás tareas requeridas en este trabajo fueron realizados en los softwares R y Python. La información necesaria para replicar los resultados presentados en este reporte se encuentran en el siguiente repositorio de GitHub: https://github.com/psaldar/metodos-estadisticos-avanzados . Dentro de la información se incluye los archivos que contienen tanto los datos antes y después de su procesamiento, además de los códigos de Python en Notebooks de Jupyter como el código de R en un documento en Markdown.
+Los diferentes análisis, preparación de datos y demás tareas requeridas en este trabajo fueron realizados utilizando R y Python. La información necesaria para replicar los resultados presentados en este reporte se encuentran en el siguiente repositorio de GitHub: https://github.com/psaldar/metodos-estadisticos-avanzados. Dentro de la información se incluye los archivos que contienen tanto los datos antes y después de su procesamiento, además de los códigos de Python en Notebooks de Jupyter como el código de R en un documento como Markdown.
 
 ## Introducción
 
