@@ -135,7 +135,7 @@ Cabe mencionar que al momento de realizar las interpretaciones de los resultados
 
 
 ## Análisis descriptivo
-Damos una visualizacion inicial al conjunto de datos con el que se va a trabajar. Las variables de salida con sufijo _dif representan la variación porcentual ya con la transformada del logaritmo, las variables de salida sin sufijo son las variables originales en niveles y las variables de salida con sufijo _dif_sinlog representan las variaciones porcentuales anuales (sin aplicar aún la transformada del logaritmo). También se recuerda que ya se aplicó la transformación del logaritmo para todas la variables explicativas presentadas aquí y en las siguientes secciones.
+Damos una visualizacion inicial al conjunto de datos con el que se va a trabajar. Las variables de salida con sufijo _dif representan la variación porcentual ya con la transformación del logaritmo, las variables de salida sin sufijo son las variables originales en niveles y las variables de salida con sufijo _dif_sinlog representan las variaciones porcentuales anuales (sin aplicar aún la transformación del logaritmo). También se recuerda que ya se aplicó la transformación del logaritmo para todas la variables explicativas presentadas aquí y en las siguientes secciones.
 
 Tener en cuenta que en la tabla siguiente, las primeras 33 observaciones son para el año 2016, las siguientes 33 para el año 2017 y las últimas 33 para el año 2018.
 
@@ -194,7 +194,7 @@ kable(summary_df, digits =4) %>%
 
 ```
 
-Además de la información descriptiva presentada en la tabla anterior, podemos ver para cada una de las variables y su distribución de forma visual con la ayuda de la creación de histogramas de frecuencia. 
+Además de la información descriptiva presentada en la tabla anterior, podemos ver para cada una de las variables su distribución de forma visual con la ayuda de la creación de histogramas de frecuencia. 
 
 ```{r fig.align='center', echo = FALSE}
 plot1 = ggplot(data, aes(x=Costo.de.ventas)) + 
@@ -224,37 +224,7 @@ plot6 = ggplot(all_data, aes(x=Gastos.de.ventas_dif_sinlog)) +
 grid.arrange(plot1, plot2, plot3, plot4, plot5, plot6 ,ncol=2, nrow=3)
 ```
 
-Vamos a obtener la información relacionada a las medidas de centralidad y dispersión del conjunto de datos. Notar que en la tabla descriptiva presentada anteriormente, contamos con la presencia del vector de medias y medianas que describen la centralidad del conjunto de datos. 
-
-### Boxplot para variables absolutas
-
-
-```{r fig.align='center'}
-par(mfrow=c(1,2))
-bxplot_costos = boxplot(Costo.de.ventas~Year, data = all_data)
-bxplot_gastos = boxplot(Gastos.de.ventas~Year, data = all_data)
-```
-
-```{r}
-### Outliers para costos
-nits_tab = t(all_data[(all_data$Costo.de.ventas %in% bxplot_costos$out),]$NIT)
-rownames(nits_tab) <- c("NITs")
-
-kable(nits_tab)%>%
-  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
-  column_spec(1,bold=T)
-```
-
-```{r}
-### Outliers para gastos
-nits_tab = t(all_data[(all_data$Gastos.de.ventas %in% bxplot_gastos$out),]$NIT)
-rownames(nits_tab) <- c("NITs")
-
-kable(nits_tab)%>%
-  kable_styling(bootstrap_options = "striped", full_width = F, position = "center", fixed_thead = T)%>%
-  column_spec(1,bold=T)
-
-```
+Vamos a obtener la información relacionada a las medidas de centralidad y dispersión del conjunto de datos. Notar que en la tabla descriptiva presentada anteriormente, contamos con la presencia del vector de medias y medianas que describen la centralidad del conjunto de datos, posteriormente, mostraremos la matriz de covarianzas y de correlación como parte del análisis de la dispersión de los datos. 
 
 ### Boxplot para variables originales (en niveles)
 
@@ -315,7 +285,7 @@ kable(nits_tab)%>%
 
 ```
 
-#### Boxplot para las variaciones porcentuales sin hacer aún la transformación logarítmica
+### Boxplot para las variaciones porcentuales sin hacer aún la transformación logarítmica
 
 ```{r fig.align='center'}
 par(mfrow=c(1,2))
@@ -389,7 +359,7 @@ Dado que en este trabajo se pretende realizar la modelación de alguna de las va
 
 Adicionalmente, se nota también que las variables macroeconómicas suelen tener altas correlaciones entre sí, esto era algo de esperar ya que todas están relacionadas con la economía del país y es de esperar que sí la economía esté mejorando ciertas variables incrementen y otras disminuyan, y viceversa.
 
-Por otro lado, para la variable en la que nos enfocamos que es Costo_de_ventas_dif, no se ven correlaciones fuertes en relación a las variables macro-económicas, lo que nos indica que no existe una clara relación lineal entre esta variable y las demás. De esta matriz de correlación es claro que hay las dependencias lineales entre las variables explicativas y las variables de salida  son muy débiles, lo que complica que haya un buen desempeño de los modelos. Sin embargo, esto era de esperar debido a que se tienen solo 3 valores únicos de las variables macroeconómicas mientras que las variables de respuesta tienen una gran variabilidad, por lo que muchas veces cambian los valores de la variable de respuesta y no cambia el valor de las variables explicativas, lo que conlleva a que sea baja su correlación.  
+Por otro lado, para la variable en la que nos enfocamos que es Costo_de_ventas_dif, no se ven correlaciones fuertes en relación a las variables macroeconómicas, lo que nos indica que no existe una clara relación lineal entre esta variable y las demás. De esta matriz de correlación es claro que hay las dependencias lineales entre las variables explicativas y las variables de salida  son muy débiles, lo que complica que haya un buen desempeño de los modelos. Sin embargo, esto era de esperar debido a que se tienen solo 3 valores únicos de las variables macroeconómicas mientras que las variables de respuesta tienen una gran variabilidad, por lo que muchas veces cambian los valores de la variable de respuesta y no cambia el valor de las variables explicativas, lo que conlleva a que sea baja su correlación.  
 
 
 ## Visualización de la distribución de los datos
