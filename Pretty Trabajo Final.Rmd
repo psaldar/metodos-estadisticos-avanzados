@@ -36,43 +36,43 @@ library(olsrr)
 
 ### Repositorio
 
-Los diferentes análisis, preparación de datos y demás tareas requeridas en este trabajo fueron realizados utilizando R y Python. La información necesaria para replicar los resultados presentados en este reporte se encuentran en el siguiente repositorio de GitHub: https://github.com/psaldar/metodos-estadisticos-avanzados. Dentro de la información se incluye los archivos que contienen tanto los datos antes y después de su procesamiento, además de los códigos de Python en Notebooks de Jupyter como el código de R en un documento como Markdown.
+Los diferentes análisis, preparación de datos y demás tareas requeridas en este trabajo fueron realizados utilizando R y Python. La información necesaria para replicar los resultados presentados en este reporte se encuentran en el siguiente repositorio de GitHub: https://github.com/psaldar/metodos-estadisticos-avanzados. Dentro de la información se incluyen los archivos que contienen tanto los datos antes y después de su procesamiento, además de los códigos de Python en Notebooks de Jupyter y el código de R en un documento como Markdown.
 
 ## Introducción
 
-El modelamiento del comportamiento de diferentes variables es un tema que ha sido estudiado en sectores energéticos, industriales, económicos y financieros. De allí se comienza a apreciar tanto la importancia que tienen los datos hoy en día al igual que las técnicas utilizadas para su modelamiento. La estadística es una disciplina que se preocupa por la recolección, organización, interpretación y análisis de datos, que, según su aplicación puede traer un gran impacto en la industria al momento de la toma de decisiones. En particular, diferentes técnicas estadísticas han sido utilizadas en el sector financiero, las cuales permiten modelar comportamiento de los clientes, acciones, entre otras variables.
+El modelamiento del comportamiento de diferentes variables es un tema que ha sido estudiado en sectores energéticos, industriales, económicos y financieros. De allí se comienza a apreciar tanto la importancia que tienen los datos hoy en día al igual que las técnicas utilizadas para su modelamiento. La estadística es una disciplina que se preocupa por la recolección, organización, interpretación y análisis de datos, la cual, según su aplicación, puede traer un gran impacto en la industria al momento de la toma de decisiones. En particular, diferentes técnicas estadísticas han sido utilizadas en el sector financiero, las cuales permiten modelar comportamiento de los clientes, las acciones, y de otras variables.
 
-Diferentes industrias dentro de su funcionamiento, deben presentar ante la superintendencia información relacionando los gastos y ventas que presentaron anualmente. Además, se presume que del mercado colombiano, como en los procesos de las industria está esa interacción con todo el mercado, es posible pensar que exista una relación entre las diferentes variables macroeconomicas (ej. PIB, TRM, Balance Fiscal, Indice de Desempleo, etc.) y estos montos de costos y gastos de las empresas. Debido a la cantidad de información con la que se cuenta (información de costos y gastos para diferentes empresas en colombia entre los años 2016 y 2018), se sabe que no se cuenta con información suficiente para la construcción de un modelo por empresa que permita ver la relación existente entre las variables macroeconómicas y las variables asociadas a costos y gastos de ventas. Por lo anterior, es posible considerar un conjunto de datos como la consolidación de la información de todas las empresas junto con la información macroeconomica para los años en estudio, así buscando construir un modelo general para realizar la modelación de estas variables reportadas ante la superintendencia para un conjunto de empresas cuya industria sea similar.
+Diferentes industrias dentro de su funcionamiento deben presentar ante la Superintendencia información relacionando los ingresos, los costos de venta (dinero invertido para la producción de un bien o servicio) y los gastos de venta (dinero invertido para la distribución de un bien o servicio) que presentaron anualmente. Además, se presume que del mercado colombiano es posible pensar que exista una relación entre las diferentes variables macroeconómicas (ej. PIB, TRM, Balance Fiscal, Indice de Desempleo, etc.) y estos montos de costos y gastos de las empresas. Debido a la cantidad de información con la que se cuenta (información de costos y gastos para diferentes empresas en colombia entre los años 2016 y 2018), se sabe que no se cuenta con información suficiente para la construcción de un modelo por empresa que permita ver la relación existente entre las variables macroeconómicas y las variables asociadas a costos y gastos de ventas. Por lo anterior, es posible considerar un conjunto de datos como la consolidación de la información de todas las empresas junto con la información macroeconomica para los años en estudio, así buscando construir un modelo general para realizar la modelación de estas variables reportadas ante la superintendencia para un conjunto de empresas cuya industria sea similar.
 
-De esta manera, para el conjunto de datos mencionado anteriormente, nos enfocaremos en modelar la información de costos de venta a partir de las variables macroeconómicas disponibles. Se utilizarán modelos lineales para este trabajo: se usa un modelo lineal general y un modelo de efectos mixtos. Esta última estructura de modelos es bastante usada al momento de tener individuos que comparten la misma información pero tienen una salida diferente (en nuestro caso, todas las empresas comparten la misma información de las variables macroeconómicas), por lo que utilizar este tipo de modelos resulta de gran interés ya que permite modelar tanto efectos a nivel de individuo como a nivel poblacional general.
+De esta manera, para el conjunto de datos mencionado anteriormente, nos enfocaremos en modelar la información de costos de venta a partir de las variables macroeconómicas disponibles. Se utilizarán modelos lineales para este trabajo: se usa un modelo lineal general y un modelo de efectos mixtos. Esta última estructura de modelos es bastante usada al momento de tener individuos que comparten la misma información pero tienen una salida diferente (en nuestro caso, todas las empresas comparten la misma información de las variables macroeconómicas pero tienen distintos costos de venta), por lo que utilizar este tipo de modelos resulta de gran interés ya que permite modelar tanto efectos a nivel de individuo como a nivel poblacional general.
 
 ## Clasificación Industrial Seleccionada
 
-El sector de la construcción es uno de los más relevantes en la economía colombiana. En nuestro contexto nacional el sector es considerado como uno de los más vitales para el desarrollo del país y representa uno de los más importantes rubros en materia de produccción interna componiendo cada año de 6 a 7 por ciento del producto interno bruto total y hasta un 7.1% del total de ocupados a nivel nacional. Dicho sector es caracterizado por sus fluctuaciones estacionarias fuertemente influenciadas por los planes de infraestructura de gran escala y los planes de gobierno. Respecto al último trimestre de 2019 tuvo un aumento de 3.4%, uno de los más altos a nivel de america latina.
+El sector de la construcción es uno de los más relevantes en la economía colombiana. En nuestro contexto nacional el sector es considerado como uno de los más vitales para el desarrollo del país y representa uno de los más importantes rubros en materia de produccción interna componiendo cada año de 6 a 7 por ciento del producto interno bruto total y hasta un 7.1% del total de ocupados a nivel nacional. Dicho sector es caracterizado por sus fluctuaciones estacionarias fuertemente influenciadas por los planes de infraestructura de gran escala y los planes de gobierno. Respecto al último trimestre de 2019 tuvo un aumento de 3.4%, uno de los más altos a nivel de América latina.
 
-Si bien las estimaciones globales para el año 2020 en Colombia para esta industria eran positivas, la coyuntura del COVID-19 ha de perturbar fuertemente el sector,  afectando con alto impacto a los importadores de materiales y a la demanada frente a los retrasos en la ejecución de obras. Desde enero el sector de la producción de concreto
-ya estaba presentando caídas significativas de hasta un 8.3% respecto al año pasado en el mismo mes, por lo que se esperan peores resultados al cierre del segundo trimestre del año presente. Muchas compañías planearon incrementos en sus precios, con la esperanza de generar mayores ingresos, pero dichos planes han de ser postergados bajo la actual coyuntura. La demanda, el driver más relevante en la industria, claramente se ve desplazado efecto del impedimento de comercialización y la paralisis en el país bajo las medidas de cuarentena
+Si bien las estimaciones globales para el año 2020 en Colombia para esta industria eran positivas, la coyuntura del COVID-19 ha de perturbar fuertemente el sector,  afectando con alto impacto a los importadores de materiales y a la demanda frente a los retrasos en la ejecución de obras. Desde enero el sector de la producción de concreto
+ya estaba presentando caídas significativas de hasta un 8.3% con respecto al año pasado en el mismo mes, por lo que se esperan peores resultados al cierre del segundo trimestre del año presente. Muchas compañías planearon incrementos en sus precios, con la esperanza de generar mayores ingresos, pero dichos planes han de ser postergados bajo la actual coyuntura. La demanda, el driver más relevante en la industria, claramente se ve desplazado por efecto del impedimento de comercialización y la paralisis en el país bajo las medidas de cuarentena
 nacional. Un punto importante es que algunas compañías del sector podrán seguir con sus actividades producto de la inclusión de actividades de infraestructura como vital durante la crisis del COVID-19.
 
-Frente a la incertidumbre que generan estos escenarios y como la dinámica particular de cada compañía que aporta al crecimiento de la industria total evoluciona en el tiempo se torna relevante construir análisis y modelos estadísticos robustos que respondan a las perturbaciones en el mercado y permitan obtener información valiosa para la toma de decisiones.
+Frente a la incertidumbre que generan estos escenarios y teniendo en cuenta que la dinámica particular de cada compañía que aporta al crecimiento de la industria total evoluciona en el tiempo, se torna relevante construir análisis y modelos estadísticos robustos que respondan a las perturbaciones en el mercado y permitan obtener información valiosa para la toma de decisiones.
 
 
 ## Consolidación de los datos (variables de salida y explicativas)
 
-NOTA: toda esta parte inicial de preparación y consolidación de los datos se hizo en Python. Los programas para realizarla se encuentran en el repositorio. Este script de R toma solo el dataset final que fue resultado de toda la consolidación y preprocesamiento.
+NOTA: toda esta parte inicial de preparación y consolidación de los datos se hizo en Python en un notebook de Jupyter. El notebook que realiza esta consolidación se encuentra en el repositorio, en la carpeta "PreparacionDatos". Este script de R toma solo el dataset final que fue resultado de toda la consolidación y preprocesamiento.
 
-Los datos que de la variable de respuesta (costos y gastos de ventas de algunas empresas para los años 2016 a 2018) se extrajeron de: http://pie.supersociedades.gov.co.
+Los datos de la variable de respuesta (costos y gastos de ventas de algunas empresas para los años 2016 a 2018) se extrajeron de: http://pie.supersociedades.gov.co.
 
-Se conservaron solo las empresas cuya clasificación industrial uniforme internacional tenga la palabra “construcción” en ella y cuyos NIT estuvieran incluidos en el archivo de empresas de 2018. Luego de aplicar este filtro, se eliminaron también todas aquellas empresas que en algún año entre 2015 y 2018 tuvieran algún valor vacío o nulo (NaN o cero) ya sea en sus costos de venta o en sus gastos de venta (se asumen que costos o gastos de venta de cero serían un error en la medición), dejando en total 33 empresas distintas en el dataset. A pesar de que solo se analizan en este reporte los años 2016 a 2018, fue necesario también descargar 2015 para poder calcular la variable en diferencias para 2016. Para calcular las variables de costos y gastos de ventas en diferencia porcentual, se usó su variación porcentual entre un año y otro, la cual se calculo con esta fórmula:
+Se conservaron solo las empresas cuya clasificación industrial uniforme internacional tenga la palabra “construcción” en ella y cuyos NIT estuvieran incluidos en el archivo de empresas de 2018 (Plenas e Individuales). Luego de aplicar este filtro, se eliminaron también todas aquellas empresas que en algún año entre 2015 y 2018 tuvieran algún valor vacío o nulo (NaN o cero) ya sea en sus costos de venta o en sus gastos de venta (se asumen que costos o gastos de venta de cero serían un error en la medición), dejando en total 33 empresas distintas en el dataset. A pesar de que solo se analizan en este reporte los años 2016 a 2018, fue necesario también descargar 2015 para poder calcular la variación porcentual anual para 2016. Para calcular las variables de costos y gastos de ventas como variación porcentual anual, s usa la siguiente fórmula:
 
 $$ CostoDeVentasDif(t) = \dfrac{CostoDeVentas(t) – CostoDeVentas(t-1)}{|CostoDeVentas(t-1)|} $$
 
-Donde t era el año. Así, se obtuvieron Costos_de_ventas_dif para los años 2016, 2017 y 2018. Se incluye el valor absoluto en el denominador en la fórmula para casos donde la variable sea negativa. Esto no ocurre con costos de ventas claramente, pero algunas variables macroeconómicas si tienen valores negativos como por ejemplo el Balance_Fiscal, por eso se generaliza la fórmula de variación porcentual para todas con el valor absoluto.
+Donde t era el año. Así, se obtuvieron Costos_de_ventas_dif para los años 2016, 2017 y 2018. Se incluye el valor absoluto en el denominador en la fórmula para casos donde la variable sea negativa. Esto no ocurre con costos de ventas claramente, pero algunas variables macroeconómicas si tienen valores negativos como por ejemplo el Balance_Fiscal, por eso se generaliza la fórmula de variación porcentual para todas las variables con el uso del valor absoluto.
 
 NOTA: A pesar de que en este trabajo los modelos que usamos son solo para el costo de ventas, aplicamos la misma transformación para el gasto de ventas para los análisis descriptivos.
 
 Los valores para las variables macroeconómicas (variables explicativas) se extrajeron del Banco de la República y del DANE. Se descargaron archivos de Excel para cada una de las variables macro. 
-Algunas de estas variables macro ya venían como variación porcentual entre un año y el otro. Sin embargo, otras no venían de esta manera. A continuación, detallamos la forma final en la que quedaría cada una de las variables (luego de nuestro preprocesamiento interno en scripts de Python).
+Algunas de estas variables macro ya venían como variación porcentual entre un año y el otro. Sin embargo, otras no venían de esta manera y fue necesario transformarlas algunas de éstas. A continuación, detallamos la forma final en la que queda cada una de las variables (luego de nuestro preprocesamiento interno en Python).
 
 * PIB: variación porcentual del PIB total entre un año y otro
 
@@ -90,14 +90,14 @@ Algunas de estas variables macro ya venían como variación porcentual entre un 
 
 Se hacen un par de aclaraciones: 
 
-* Se menciona que, ya posteriormente en este reporte de R, se aplica una transformación de log(1+X) para todas las variables (tanto para las de salida como para las de entrada). Esto es para poder aportarle interpretabilidad a los modelos de regresión (los coeficientes de las regresiones representarán los cambios porcentuales en la variable de salida que se tendrán al cambiar en porcentaje las variables explicativas).
+* Se menciona que, ya posteriormente en este reporte de R, se aplica una transformación de log(1+X) para todas las variables (tanto para las de salida como para las de entrada). Esto es para poder aportarle interpretabilidad a los modelos de regresión para que sean log-log (los coeficientes de las regresiones representarán los cambios porcentuales en la variable de salida que se tendrán al cambiar en porcentaje las variables explicativas).
 
-* Todas las variables se muestran como un valor real, a pesar de que algunas de ellas representen porcentajes. Esto quiere decir por ejemplo que una variable cómo la variación porcentual del PIB tomaría el valor de 0.07 para representar un porcentaje del 7%. 
+* Todas las variables se muestran como un valor real, a pesar de que algunas de ellas representen porcentajes. Esto quiere decir por ejemplo que una variable cómo la variación porcentual del PIB tomaría el valor de 0.07 para representar una porcentaje del 7% (en este caso, sería variación porcentual anual del 7%). 
 
 
 
 ## Lectura de los datos
-Aquí se lee el archivo de datos que ya fue preparado con los scripts de Python, tal como se mencionó anteriormente.
+Aquí se lee el archivo de datos que ya fue preparado en Python, tal como se mencionó anteriormente.
 
 ```{r}
 all_data = read.csv("PreparacionDatos/Datos_completos.csv", encoding = "UTF-8")
@@ -106,7 +106,7 @@ NIT = all_data['NIT']
 
 ## Transformación de los Datos
 
-Para fines de intepretación de los modelos creados en el trabajo y para estabilizar un poco la varianza, consideraremos la transformación logarítmica tanto para los predictores como para la variable respuesta para poder tener un modelo de tipo log-log, para así poder interpretar un coeficiente (beta) de la regresión como el incremento porcentual que se tendría de la variable dependiente al incrementar un 1% de la variable independiente relacionada con este coeficiente. Esta transformación del logaritmo también es de utilidad ya que se trabaja con porcentajes y en estos casos es usual que se presenten sesgos en la variable. De esta forma, la transformación logarítimica que se realiza es:
+Para fines de intepretación de los modelos creados en el trabajo y para estabilizar un poco la varianza, consideraremos la transformación logarítmica tanto para los predictores como para la variable respuesta para poder tener un modelo de tipo log-log. Esto permitirá poder interpretar un coeficiente (beta) de la regresión como el incremento porcentual que se tendría de la variable dependiente al incrementar un 1% de la variable independiente relacionada con este coeficiente. Esta transformación del logaritmo también es de utilidad ya que se trabaja con porcentajes y en estos casos es usual que se presenten sesgos en la variable. De esta forma, la transformación logarítimica que se realiza es:
 
 $$T(x) = log(1+x) $$
 
@@ -116,12 +116,6 @@ $$ T(CostoDeVentasDif) = log(1+\dfrac{CostoDeVentas(t) – CostoDeVentas(t-1)}{|
 
 ```{r}
 ### Transformacion de las variables
-
-### Recordar para la interpretacion de los modelos:
-### regresion log(y) = b*log(x) -> cambio en x, es un aumento en b% en y
-### regresion log(y) = b*x -> cambio en x implica un aumento en 100*b puntos en y
-### regresion y = b*log(x) -> cambio en x implica un cambio de (b/100)% en y
-### regresion y = b*x -> cambio en x implica un aumento de b en y
 
 ### Transformacion a nivel logaritmico
 all_data$Costo.de.ventas_dif_sinlog = all_data$Costo.de.ventas_dif
@@ -137,13 +131,15 @@ all_data$Inflacion = log(1 + all_data$Inflacion)
 all_data$Tasa_Intervencion = log(1 + all_data$Tasa_Intervencion)
 ```
 
-Cabe mencionar que al momento de realizar las interpretaciones de los resultados del modelo en cuanto a ajuste y capacidad predictiva, se regresa la variable de salida a su representación de variaciones porcentuales.
+Cabe mencionar que al momento de realizar las interpretaciones de los resultados del modelo en cuanto a su ajuste y su capacidad predictiva (en los plots que comparan valores predichos contra reales), se regresa la variable de salida a su representación de variaciones porcentuales anuales.
 
 
 ## Análisis descriptivo
-Damos una visualización inicial al conjunto de datos con el que se va a trabajar:
+Damos una visualizacion inicial al conjunto de datos con el que se va a trabajar. Las variables de salida con sufijo _dif representan la variación porcentual ya con la transformada del logaritmo, las variables de salida sin sufijo son las variables originales en niveles y las variables de salida con sufijo _dif_sinlog representan las variaciones porcentuales anuales (sin aplicar aún la transformada del logaritmo). También se recuerda que ya se aplicó la transformación del logaritmo para todas la variables explicativas presentadas aquí y en las siguientes secciones.
 
-```{r echo=FALSE}
+Tener en cuenta que en la tabla siguiente, las primeras 33 observaciones son para el año 2016, las siguientes 33 para el año 2017 y las últimas 33 para el año 2018.
+
+```{r}
 data = all_data[, -c(1,2)]
 
 ref_ds=round( all_data[, -c(2)],4)
@@ -168,9 +164,9 @@ kable(ref_ds, digits = 4) %>%
   scroll_box("100%", height = "250px")
 ```
 
-En la siguiente tabla, vemos información descriptiva de las variables que se considerarán en la etapa de modelamiento del trabajo, vemos así que contamos con 6 posibles variables respuesta y 7 variables explicativas, cada una con magnitudes diferentes. Esto nos permite tener una idea inicial de las características del conjunto de datos.
+En la siguiente tabla, vemos información descriptiva de las variables que se considerarán en la etapa de modelamiento del trabajo. Esto nos permite tener una idea inicial de las características del conjunto de datos. Se recuerda que en los modelos nos enfocaremos solamente en la variable de salida Costo_de_ventas_dif y en cómo modelarla usando las variables explicativas. Sin embargo, se incluyen en esta parte del análisis explicativo otras variables de costos y gastos de venta.
 
-```{r echo=FALSE}
+```{r}
 col_order_data <- c("Costo.de.ventas", "Gastos.de.ventas", "Costo.de.ventas_dif", "Gastos.de.ventas_dif", "Costo.de.ventas_dif_sinlog", "Gastos.de.ventas_dif_sinlog", "TRM" ,"PIB", "Desempleo",  "Inflacion", "Tasa_Intervencion", "Balance_CC", "Balance_Fiscal")
 
 data_summ <- data[, col_order_data]
@@ -198,7 +194,7 @@ kable(summary_df, digits =4) %>%
 
 ```
 
-Además de la información descriptiva presentada en la tabla anterior, podemos ver para cada una de las variables y su distribución de forma visual con la ayuda de la creación de histogramas de frecuencia. Recordemos que en este caso las variables costos y gastos de venta son las variables originales con sus respectivas magnitudes, aquellas indicadas con el posfijo _dif_sinlog son la variación porcentual previamente expuesta y finalmente las marcadas como _dif son las transformaciones logarítimicas de las variaciones porcentuales de dichas variables.
+Además de la información descriptiva presentada en la tabla anterior, podemos ver para cada una de las variables y su distribución de forma visual con la ayuda de la creación de histogramas de frecuencia. 
 
 ```{r fig.align='center', echo = FALSE}
 plot1 = ggplot(data, aes(x=Costo.de.ventas)) + 
@@ -228,7 +224,7 @@ plot6 = ggplot(all_data, aes(x=Gastos.de.ventas_dif_sinlog)) +
 grid.arrange(plot1, plot2, plot3, plot4, plot5, plot6 ,ncol=2, nrow=3)
 ```
 
-Vamos a obtener la información relacionada a las medidas de centralidad y dispersión del conjunto de datos. Notar que en la tabla descriptiva anteriormente, contamos con la presencia del vector de medias y medianas que describen la centralidad del conjunto de datos. Posteriormente, consideramos las matrices de Covarianza y Correlación para tener una intuición de la variabilidad de la información que consideramos.
+Vamos a obtener la información relacionada a las medidas de centralidad y dispersión del conjunto de datos. Notar que en la tabla descriptiva presentada anteriormente, contamos con la presencia del vector de medias y medianas que describen la centralidad del conjunto de datos. 
 
 ### Boxplot para variables absolutas
 
@@ -352,20 +348,20 @@ kable(nits_tab)%>%
 
 ### Análisis:
 
-Al observar la distribución del comportamiento de las variables de ventas y gastos para los 3 años en consideración, podemos ver que no hay mucha variación entre el comportamiento de éstas a lo largo del tiempo, vemos que en particular, tanto el monto de costo y gasto promedio (mediana) es prácticamente constante para los 3 años, aunque se nota un aumento en los costos en el año 2018 para el caso de algunas empresas. Ademas, vemos que para el caso de los Costos, las mismas 2 empresas (relacionadas a los NITs 860009694 y 900378893) fueron las que presentaron un mayor valor de costos en los 3 periodos, por lo que el boxplot los considera registros outliers. Mirando la distribución de los gastos, notamos que una empresa tuvo los gastos mas altos en los 3 periodos (relacionadas al NIT 801002644) pero adicional, en el último año, la empresa con el NIT 800015615 tuvo un aumento notable en sus gastos, por lo que es considerado también como un outlier por el boxplot.
+Al observar la distribución del comportamiento de las variables de ventas y gastos originales (en niveles) para los 3 años en consideración, podemos ver que no hay mucha variación entre el comportamiento de éstas a lo largo del tiempo, vemos que en particular, tanto el monto de costo y gasto promedio (mediana) es prácticamente constante para los 3 años, aunque se nota un aumento en los costos en el año 2018 para el caso de algunas empresas. Ademas, vemos que para el caso de los Costos, las mismas 2 empresas (relacionadas a los NITs 860009694 y 900378893) fueron las que presentaron un mayor valor de costos en los 3 periodos, por lo que el boxplot los considera registros outliers. Mirando la distribución de los gastos, notamos que una empresa tuvo los gastos mas altos en los 3 periodos (relacionadas al NIT 801002644) pero adicional, en el último año, la empresa con el NIT 800015615 tuvo un aumento notable en sus gastos, por lo que es considerado también como un outlier por el boxplot.
 
 Pasando a observar los boxplots de la distribución de las variables porcentuales (transformadas y sin transformar) de costos y gastos, vemos para ambos casos los registros outliers son aquellos que tienen un valor tanto de disminución como incremento porcentual muy altos (nos damos cuenta de esto al ver los boxplots de la variación porcentual sin aplicar aún la transformación logarítimica). Podemos ver que para el caso del 2016 en la variable costos, las empresas outliers fueron las correspondientes a los NITs 800236890 y 890909034,	de estas, la que no presenta una diferencia negativa fue la primera (800236890), por lo que puede indicar un aumento considerable (raro) en el mercado en término de los costos de venta (practicamente el doble del año anterior tal como se puede contrastar con la variable en niveles de costo de diferencia relativa), mientras que la otra empresa presenta una disminución considerable en este mismo concepto. Para el caso del 2017, una empresa fue considerada como outlier: la empresa considerada como registro raro (900389088) tuvo un aumento en sus costos de un 88% (casi el doble de los costos del año anterior. Este punto corresponde al punto mostrado en el boxplot de la variable de diferencia de costo de ventas sin log). Para el último periodo, las empresas con NITs 800045720, 800236890, 890311366, 890909034, 900234565, 900364670 y 900378893 fueron consideradas como outliers, solo se encuentra una de las empresas fue mencionada en uno de los dos periodos anteriores (800236890), la cual vuelve a reportar una disminución considerable en sus costos (esta empresa corresponde al punto mostrado por el boxplot de diferencia de costos de venta para el año 2018, contrastando así la disminución que presentó en este año).
 
 Ahora mirando la variable de diferencia de gastos, solamente 2 empresas tienen comportamientos muy altos, presentando un aumento de casi el doble de los gastos anuales, estas empresas corresponden a los NITs 800081030 y 890904459 para los años 2016 y 2017 respectivamente, en cambio para el 2018, se tuvo variabilidad en los gastos de ventas de 8 empresas que son considerados anormales tanto por sus aumentos como disminuciones, aquellas empresas son las de los NIT 900389088,	800045720,	800236890,	890311366,	890909034,	900234565,	900364670,	900378893 y 900364670. En aquellas empresas que tuvieron aumentos considerables, reportan casi hasta un cuarto del aumento de gastos en comparación al año anterior, mientras que aquellas que reportan una disminución, vemos que sus gastos se disminuyeron hasta el doble del periodo pasado. 
 
-Así, estos cambios en las industrias en sus costos y gastos de ventas, pueden estar directamente relacionados con algunos eventos que hayan hecho la gran variación en la materia prima requerida para sus productos (tipos de mezlcas de cemento por ejemplo), además que el sector seleccionado depende bastante de los planes de infraestructura que se tengan, por lo que también es factible que en los periodos analizados, hayan ocurrido cambios en estos planes dentro de la contratación de cada empresa, y sean estas las causas que nos lleven a ver diferencias tan grandes de periodo a periodo (tanto positivas como negativas).
+Así, estos cambios en las industrias en sus costos y gastos de ventas, pueden estar directamente relacionados con algunos eventos que hayan hecho la gran variación en la materia prima requerida para sus productos (tipos de mezlcas de cemento por ejemplo), además de que el sector seleccionado depende bastante de los planes de infraestructura que se tengan, por lo que también es factible que en los periodos analizados hayan ocurrido cambios en estos planes dentro de la contratación de cada empresa, y sean estas las causas que nos lleven a ver diferencias tan grandes de periodo a periodo (tanto positivas como negativas).
 
 #### Nota
 Ahora, habiendo ya analizado las distribuciones de las variables, pasamos entonces a analizar la relación de la variable respuesta con los predictores. De aquí en adelante, usaremos siempre la variable de respuesta transformada (tanto para estos análisis de relación con predictores como para los gráficos de contorno y posteriormente para todos los modelos), ya que la variable con la transformación logarítmica es la que usaremos para las regresiones log-log. De esta forma, en todas las siguientes secciones del reporte cuando se mencione la variable "Costo de ventas" es la variable original en niveles, y la variable "Costo_de_ventas_dif" es la transformación logarítmica de la variación porcentual anual de dicha variable. Lo mismo aplica para Gastos de Ventas y Gastos_de_ventas_dif (aunque estas de gastos de ventas solo se usan en el análisis descriptivo).
 
 
 
-Miramos entonces las matrices de Covarianza y Correlación para tener una intuición de la variabilidad de la información que consideramos.
+Miramos ahora las matrices de Covarianza y Correlación para tener una intuición de la variabilidad de la información que consideramos.
 
 #### Matriz de Covarianzas
 
@@ -389,15 +385,15 @@ kable(round(cor_data,2)) %>%
 corrplot(cor_data, method="circle")
 ```
 
-Dado que en este trabajo se pretende realizar la modelación de alguna de las variable de costo de ventas (también considerando la transformación de las variables por periodo), la matriz de correlación es un buen indicador para observar relaciones lineales existentes en las variables. En particular, vemos correlaciones relativamente fuertes entre algunas de las versiones de las variables de costos y gastos. Para este caso, es natural encontrar una correlación alta en varias de estas variables, pues es usual que los costos de venta y los gastos de venta se relacionen entre sí, ya que ambas tienen que ver con dinero que las empresas gastan ya sea para producir un producto (costos de venta) o para distribuirlo (gastos de ventas). Además, es normal también ver una alta correlación entre una variable y su transformación.  
+Dado que en este trabajo se pretende realizar la modelación de alguna de las variables de costo de ventas (también considerando la transformación de las variables por periodo), la matriz de correlación es un buen indicador para observar relaciones lineales existentes en las variables. En particular, vemos correlaciones relativamente fuertes entre algunas de las versiones de las variables de costos y gastos. Para este caso, es natural encontrar una correlación alta en varias de estas variables, pues es usual que los costos de venta y los gastos de venta se relacionen entre sí, ya que ambas tienen que ver con dinero que las empresas invierten ya sea para producir un producto (costos de venta) o para distribuirlo (gastos de ventas). Además, es normal también ver una alta correlación entre una variable y su propia transformación.  
 
 Adicionalmente, se nota también que las variables macroeconómicas suelen tener altas correlaciones entre sí, esto era algo de esperar ya que todas están relacionadas con la economía del país y es de esperar que sí la economía esté mejorando ciertas variables incrementen y otras disminuyan, y viceversa.
 
-Por otro lado, para la variable en la que nos enfocamos que es Costo_de_ventas_dif, no se ven correlaciones fuertes en relación a las variables macro-económicas, lo que nos indica que no existe una clara relación lineal entre estas variable y las demás. La correlación más fuerte que se encuentra para esta variable, es para su versión sin aplicar la transformación del logaritmo, lo cual es natural que suceda, ya que hay una clara relación entre ambas. De esta matriz de correlación es claro que hay las dependencias lineales entre las variables explicativas y las variables de salida  son muy débiles, lo que complicará el buen desempeño de los modelos. Sin embargo, esto era de esperar debido a que se tienen solo 3 valores únicos de las variables macroeconómicas mientras que las variables explicativas tienen una gran variabilidad, por lo que muchas veces cambian los valores de la variable de respuesta para un mismo valor de las variables explicativas, lo que conlleva a que sea baja su correlación.  
+Por otro lado, para la variable en la que nos enfocamos que es Costo_de_ventas_dif, no se ven correlaciones fuertes en relación a las variables macro-económicas, lo que nos indica que no existe una clara relación lineal entre esta variable y las demás. De esta matriz de correlación es claro que hay las dependencias lineales entre las variables explicativas y las variables de salida  son muy débiles, lo que complica que haya un buen desempeño de los modelos. Sin embargo, esto era de esperar debido a que se tienen solo 3 valores únicos de las variables macroeconómicas mientras que las variables de respuesta tienen una gran variabilidad, por lo que muchas veces cambian los valores de la variable de respuesta y no cambia el valor de las variables explicativas, lo que conlleva a que sea baja su correlación.  
 
 
 ## Visualización de la distribución de los datos
-Realizamos ahora una visualización (gráficos de dispersión) para todos los pares de variables que usaremos en los modelos, es decir, para la variable explicativa Costo_de_ventas_dif y para las variables macroeconómicas (todas ya con la transformación logarítmica).
+Realizamos ahora una visualización (gráficos de dispersión) para todos los pares de variables que usaremos en los modelos, es decir, para la variable de respuesta Costo_de_ventas_dif y para las variables macroeconómicas (todas ya con la transformación logarítmica).
 ```{r, echo = FALSE}
 panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...)
 {
@@ -427,7 +423,7 @@ pairs(data[,vars],labels = vars,font.labels = 2,diag.panel = panel.hist, lower.p
 
 ```
 
-En el gráfico anterior, podemos ver la información de la distribución de las variables que se utilizan en los modelos, vemos entonces que existen correlaciones fuertes entre las variables macroeconómicas, (tal como nos lo habia indicado la matriz de correlación), al mismo tiempo que se ven correlaciones muy débiles entre la variable de respuesta y los predictores. A partir de estos resultados, es claro que aquella variable que tiene una mayor variabilidad es Costo_de_ventas_dif, pues observamos que para las variables macroeconómicas que sólo contamos con la información de 3 años, la cual es la misma para todos la individuos (empresas) que estamos considerando en este trabajo, llevando así a que tengamos solo 3 valores únicos para cada variable macroeconómica, mientras que se tienen 99 valores únicos para la variable de respuesta. 
+En el gráfico anterior, podemos ver la información de la distribución de las variables que se utilizan en los modelos, vemos entonces que existen correlaciones fuertes entre las variables macroeconómicas (tal como nos lo habia indicado la matriz de correlación), al mismo tiempo que se ven correlaciones muy débiles entre la variable de respuesta y los predictores. A partir de estos resultados, es claro que aquella variable que tiene una mayor variabilidad es Costo_de_ventas_dif, pues observamos que para las variables macroeconómicas sólo contamos con la información de 3 años, y los valores que toman cada año son los mismos todos la individuos (empresas) que estamos considerando en este trabajo, llevando así a que tengamos solo 3 valores únicos para cada variable macroeconómica, mientras que se tienen 99 valores únicos para la variable de respuesta. 
 
 
 ### Visualización de los datos según curvas de normalidad
@@ -491,9 +487,9 @@ p4 = grafica(all_data, "Costo.de.ventas" , "Costo.de.ventas_dif_sinlog")
 ```
 
 
-Las gráficas anteriores nos permiten ver el comportamiento de la distribución de dos variables, además de tener como referencia los contornos de una distribución normal bivariada. En estos casos nos enfocamos en la variable de Costos de ventas y sus distintas transformaciones. De estos gráficos, podemos concluir que aquellos pares de variables graficados, no son candidatas para afirmar que pueden seguir una distribución normal, pues claramente tenemos registros dentro del conjunto de datos que en particular tienen muchos valores bastante grandes en magnitud que caen por fuera de las regiones de normalidad (más de los esperados en una distribución normal, se esperaría que solo aproximadamente el 1% de los valroes caiga por fuera de la región del 99% y está cayendo por fuera un porcentaje mucho mayor al 1%). 
+Las gráficas anteriores nos permiten ver el comportamiento de la distribución de dos variables, además de tener como referencia los contornos de una distribución normal bivariada. En estos casos nos enfocamos en la variable de Costos de ventas y sus distintas transformaciones. De estos gráficos, podemos concluir que aquellos pares de variables graficados, no son candidatas para afirmar que pueden seguir una distribución normal, pues claramente tenemos muchos registros dentro del conjunto de datos cuyos valores caen por fuera de las regiones de normalidad (más de los esperados en una distribución normal). Se esperaría que solo aproximadamente el 1% de los valores caiga por fuera de la región del 99% y está cayendo por fuera un porcentaje mucho mayor al 1%. 
 
-De igual manera, al considerar dos variables macroeconómicas incluidas (el PIB y el Desempleo), justo por la característica de las mismas en el conjunto de datos (tener sólo valores para 3 años), no nos dan información acerca de la dispersión de la variable, por el contrario, tiene un efecto en las gráficas de contorno, enfocando los datos en 3 lineas (una para cada año). La variabilidad observada en los contornos que contienen variables macroeconómicas depende casi completamente de la variable de respuesta, ya que esta variable si tiene una alta variabilidad. De igual forma, en estos gráficos de contorno que comparan un par de variables explicativas con la variable de respuesta, vemos que encontramos muchos puntos de los indivuduos que caen por fuera de la región de normalidad, por lo tanto tampoco podemos concluir normlidad bivariada entre estas variables.
+De igual manera, al considerar dos variables macroeconómicas (el PIB y el Desempleo), justo por la característica de las mismas en el conjunto de datos (tener sólo valores para 3 años), no nos dan información acerca de la dispersión de la variable, por el contrario, tiene un efecto en las gráficas de contorno de enfocar los datos en 3 lineas (una para cada año). La variabilidad observada en los contornos que contienen variables macroeconómicas depende casi completamente de la variable de respuesta, ya que esta variable sí tiene una alta variabilidad. De igual forma, en estos gráficos de contorno que comparan un par de variables explicativas con la variable de respuesta, vemos que encontramos muchos puntos de los indivuduos que caen por fuera de la región de normalidad, por lo tanto tampoco podemos concluir normlidad bivariada entre estas variables.
 
 
 
